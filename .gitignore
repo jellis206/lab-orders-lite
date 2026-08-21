@@ -6,6 +6,11 @@ out
 dist
 *.tgz
 
+# local Turso/libSQL data
+.data/
+*.db-shm
+*.db-wal
+
 # code coverage
 coverage
 *.lcov

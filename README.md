@@ -170,31 +170,42 @@ synchronization, Router owns URL state, Form owns form state, and derived values
 - [Bun](https://bun.sh/) 1.3 or newer
 - [Turso CLI](https://docs.turso.tech/cli/introduction) for the local database phase
 
-### Current scaffold
+### Install and initialize
 
 ```bash
 git clone https://github.com/jellis206/lab-orders-lite.git
 cd lab-orders-lite
 bun install
-bun dev
 ```
 
-This currently starts:
-
-- Vite web app: <http://localhost:5173>
-- Hono API: <http://localhost:3000>
-
-Database migration and seed commands are already reserved at the root and will become active in the persistence phase:
+Start the local database in one terminal, then migrate and seed it from another:
 
 ```bash
+# terminal 1
 bun run db:dev
+
+# terminal 2
 bun run db:migrate
 bun run db:seed
 ```
 
-The final local workflow will keep `bun dev` responsible for starting local Turso, the API, and the web app together.
+The seed is deterministic and safe to rerun. Local data is persisted in the ignored `.data/lab-orders.db` file.
 
-## Planned root commands
+### Run the application
+
+```bash
+bun dev
+```
+
+This starts and coordinates all three development processes:
+
+- local Turso/libSQL: <http://localhost:8080>
+- Hono API: <http://localhost:3000>
+- Vite web app: <http://localhost:5173>
+
+Vite proxies `/api` to Hono. Configuration defaults to the unauthenticated local endpoint; copy `.env.example` when overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
+
+## Root commands
 
 | Command               | Purpose                                                 |
 | --------------------- | ------------------------------------------------------- |
@@ -209,8 +220,7 @@ The final local workflow will keep `bun dev` responsible for starting local Turs
 | `bun run db:migrate`  | Apply committed migrations                              |
 | `bun run db:seed`     | Seed deterministic fictional data                       |
 
-Commands in this table are implemented and verified as their owning phase lands. See the current ticket status in
-[`plans/`](./plans/README.md).
+The foundation and persistence commands are implemented. See the remaining delivery phases in [`plans/`](./plans/README.md).
 
 ## Scope and trade-offs
 

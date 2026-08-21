@@ -3,12 +3,28 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "bun run --hot src/index.ts"
+    "dev": "bun --hot src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint src drizzle.config.ts",
+    "format": "oxfmt --write src drizzle.config.ts",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "bun src/db/migrate.ts",
+    "db:seed": "bun src/db/seed.ts",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
-    "hono": "^4.13.3"
+    "@lab-orders/contracts": "workspace:*",
+    "@lab-orders/domain": "workspace:*",
+    "@libsql/client": "^0.17.4",
+    "drizzle-orm": "^0.45.2",
+    "hono": "^4.13.3",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
-    "@types/bun": "latest"
+    "@types/bun": "latest",
+    "drizzle-kit": "^0.31.10",
+    "typescript": "~6.0.2"
   }
 }

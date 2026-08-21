@@ -1,9 +1,9 @@
-import { Hono } from 'hono'
+import { createApp } from "./app";
+import { getConfig } from "./config";
 
-const app = new Hono()
+const config = getConfig();
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
-
-export default app
+export default {
+  port: config.port,
+  fetch: createApp().fetch,
+};
