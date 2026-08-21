@@ -1,0 +1,22 @@
+{
+  "name": "lab-orders-lite",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "bun run --parallel --filter './apps/*' dev",
+    "build": "bun run --filter './apps/*' build",
+    "test": "bun test",
+    "typecheck": "bun run --filter '*' typecheck",
+    "lint": "bun run --filter '*' lint",
+    "format": "bun run --filter '*' format",
+    "check": "bun run typecheck && bun run lint && bun test",
+    "db:generate": "bun --cwd apps/api run db:generate",
+    "db:migrate": "bun --cwd apps/api run db:migrate",
+    "db:seed": "bun --cwd apps/api run db:seed",
+    "db:studio": "bun --cwd apps/api run db:studio"
+  }
+}
