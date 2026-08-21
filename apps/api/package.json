@@ -1,5 +1,7 @@
 {
-  "name": "api",
+  "name": "@lab-orders/api",
+  "private": true,
+  "type": "module",
   "scripts": {
     "dev": "bun run --hot src/index.ts"
   },
