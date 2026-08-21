@@ -2,9 +2,9 @@
 
 A small, production-minded application for managing patients, lab-test catalogs, and lab orders.
 
-Lab Orders Lite is intentionally a **polished vertical slice**, not a miniature hospital platform. The project prioritizes correctness, clear boundaries, strong typing, high-value tests, and an excellent local-development experience.
-
-> **Project status:** Active development. The Bun workspace and application scaffolds are in place; feature phases are tracked in [`plans/`](./plans/README.md). This README will stay current as each runnable slice lands.
+Lab Orders Lite is intentionally a **polished vertical slice**, not a miniature hospital platform. The project
+prioritizes correctness, clear boundaries, strong typing, high-value tests, and an excellent local-development
+experience.
 
 ## What it will support
 
@@ -31,21 +31,22 @@ Inspect and find the historical order
 
 ## Technology
 
-| Area | Choice |
-| --- | --- |
-| Runtime, package manager, tests | Bun |
-| Language | TypeScript (strict) |
-| Web | React + Vite |
-| Routing and server state | TanStack Router + Query |
-| Forms | TanStack Form |
-| Validation/contracts | Zod |
-| API | Hono REST/JSON API |
-| Persistence | Drizzle ORM + libSQL |
-| Local database | Turso CLI development server |
-| Styling | Tailwind CSS v4 |
-| Browser testing | Playwright (one focused primary-flow test) |
+| Area                            | Choice                                     |
+| ------------------------------- | ------------------------------------------ |
+| Runtime, package manager, tests | Bun                                        |
+| Language                        | TypeScript (strict)                        |
+| Web                             | React + Vite                               |
+| Routing and server state        | TanStack Router + Query                    |
+| Forms                           | TanStack Form                              |
+| Validation/contracts            | Zod                                        |
+| API                             | Hono REST/JSON API                         |
+| Persistence                     | Drizzle ORM + libSQL                       |
+| Local database                  | Turso CLI development server               |
+| Styling                         | Tailwind CSS v4                            |
+| Browser testing                 | Playwright (one focused primary-flow test) |
 
-No hosted account is required for local development. Database configuration is compatible with a future Turso Cloud deployment without changing the persistence layer.
+No hosted account is required for local development. Database configuration is compatible with a future Turso Cloud
+deployment without changing the persistence layer.
 
 ## Architecture
 
@@ -85,13 +86,15 @@ lab-orders-lite/
 └── project.md
 ```
 
-This keeps HTTP as the canonical application boundary while allowing the two apps to share contracts and pure domain logic. A CLI, mobile app, or other client could use the API later without depending on React.
+This keeps HTTP as the canonical application boundary while allowing the two apps to share contracts and pure domain
+logic. A CLI, mobile app, or other client could use the API later without depending on React.
 
 ## Domain decisions
 
 ### Money uses integer cents
 
-Prices and totals are represented as integer cents. Floating-point dollar arithmetic never determines persisted financial values.
+Prices and totals are represented as integer cents. Floating-point dollar arithmetic never determines persisted
+financial values.
 
 ### Orders preserve history
 
@@ -102,11 +105,13 @@ Order items snapshot the selected test’s:
 - price in cents
 - turnaround in hours
 
-An order also persists its derived total and estimated-ready timestamp. Editing a catalog test later cannot rewrite what was originally ordered.
+An order also persists its derived total and estimated-ready timestamp. Editing a catalog test later cannot rewrite what
+was originally ordered.
 
 ### Ready time uses the slowest test
 
-Turnaround is defined as elapsed hours—not business-calendar hours. An order is estimated to be ready when its slowest selected test is ready:
+Turnaround is defined as elapsed hours—not business-calendar hours. An order is estimated to be ready when its slowest
+selected test is ready:
 
 ```text
 CBC          12 hours
@@ -120,7 +125,8 @@ The calculation lives in pure domain code and is tested independently.
 
 ### Order creation is atomic
 
-The API—not the browser—loads current catalog values, validates the patient and selected tests, creates snapshots, calculates totals/readiness, and writes the order plus all order items in one transaction.
+The API—not the browser—loads current catalog values, validates the patient and selected tests, creates snapshots,
+calculates totals/readiness, and writes the order plus all order items in one transaction.
 
 ### Status only moves forward
 
@@ -134,7 +140,9 @@ pending ──────► in_progress ──────► completed
 
 ### Lists use cursor pagination
 
-Patients, tests, and orders use opaque cursors with deterministic indexed ordering. Search and filters are applied before pagination, and changing a filter resets loaded cursor state. This avoids loading entire datasets while keeping narrowing controls simple for users.
+Patients, tests, and orders use opaque cursors with deterministic indexed ordering. Search and filters are applied
+before pagination, and changing a filter resets loaded cursor state. This avoids loading entire datasets while keeping
+narrowing controls simple for users.
 
 ## Development approach
 
@@ -152,7 +160,8 @@ Tests are placed at the lowest useful boundary:
 - focused component tests for meaningful user interactions
 - one Playwright test for the primary cross-application workflow
 
-The project also bans direct use of React `useEffect` in repository-owned source. TanStack Query owns server synchronization, Router owns URL state, Form owns form state, and derived values are calculated during render.
+The project also bans direct use of React `useEffect` in repository-owned source. TanStack Query owns server
+synchronization, Router owns URL state, Form owns form state, and derived values are calculated during render.
 
 ## Getting started
 
@@ -187,20 +196,21 @@ The final local workflow will keep `bun dev` responsible for starting local Turs
 
 ## Planned root commands
 
-| Command | Purpose |
-| --- | --- |
-| `bun dev` | Start local Turso, API watch mode, and Vite |
-| `bun test` | Run unit, integration, and component tests |
-| `bun run build` | Build all applications |
-| `bun run typecheck` | Strictly type-check all workspaces |
-| `bun run lint` | Lint all workspaces and enforce the no-`useEffect` rule |
-| `bun run format` | Format repository source |
-| `bun run db:dev` | Start the persisted local Turso server |
-| `bun run db:generate` | Generate Drizzle migrations |
-| `bun run db:migrate` | Apply committed migrations |
-| `bun run db:seed` | Seed deterministic fictional data |
+| Command               | Purpose                                                 |
+| --------------------- | ------------------------------------------------------- |
+| `bun dev`             | Start local Turso, API watch mode, and Vite             |
+| `bun test`            | Run unit, integration, and component tests              |
+| `bun run build`       | Build all applications                                  |
+| `bun run typecheck`   | Strictly type-check all workspaces                      |
+| `bun run lint`        | Lint all workspaces and enforce the no-`useEffect` rule |
+| `bun run format`      | Format repository source                                |
+| `bun run db:dev`      | Start the persisted local Turso server                  |
+| `bun run db:generate` | Generate Drizzle migrations                             |
+| `bun run db:migrate`  | Apply committed migrations                              |
+| `bun run db:seed`     | Seed deterministic fictional data                       |
 
-Commands in this table are implemented and verified as their owning phase lands. See the current ticket status in [`plans/`](./plans/README.md).
+Commands in this table are implemented and verified as their owning phase lands. See the current ticket status in
+[`plans/`](./plans/README.md).
 
 ## Scope and trade-offs
 
@@ -216,7 +226,8 @@ The project deliberately does **not** include:
 - GraphQL, queues, event buses, or microservices
 - AI, embeddings, or vector search
 
-OpenAPI is deferred until the core workflow is complete. The goal is finished, explainable behavior rather than unfinished breadth.
+OpenAPI is deferred until the core workflow is complete. The goal is finished, explainable behavior rather than
+unfinished breadth.
 
 ## Delivery plan
 
@@ -236,4 +247,6 @@ Each ticket defines its problem, approach, commit-sized steps, acceptance criter
 
 ## AI usage
 
-AI tools are used as a planning and implementation accelerator. Generated suggestions are reviewed, adapted, tested, and kept only when they remain understandable and consistent with the project’s constraints. Every significant design and implementation choice should be explainable during the follow-up interview.
+AI tools are used as a planning and implementation accelerator. Generated suggestions are reviewed, adapted, tested, and
+kept only when they remain understandable and consistent with the project’s constraints. Every significant design and
+implementation choice should be explainable during the follow-up interview.
