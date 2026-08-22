@@ -6,8 +6,11 @@ import {
   createRouter,
   type RouterHistory,
 } from "@tanstack/react-router";
+import { z } from "zod";
 import { AppShell } from "./app-shell";
 import { Button } from "./components/button";
+import { PatientListPage } from "./features/patients/patient-list";
+import { EditPatientPage, NewPatientPage } from "./features/patients/patient-pages";
 
 function Page({ title, description }: { title: string; description: string }) {
   return (
@@ -64,12 +67,21 @@ const indexRoute = createRoute({
 const patientsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/patients",
-  component: () => (
-    <Page
-      title="Patients"
-      description="Find patient records and keep contact information current."
-    />
-  ),
+  validateSearch: z.object({ search: z.string().optional() }),
+  component: PatientListPage,
+});
+
+const newPatientRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/patients/new",
+  component: NewPatientPage,
+});
+
+const editPatientRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/patients/$patientId",
+  validateSearch: z.object({ saved: z.coerce.boolean().optional() }),
+  component: EditPatientPage,
 });
 
 const testsRoute = createRoute({
@@ -94,7 +106,14 @@ const ordersRoute = createRoute({
   ),
 });
 
-const routeTree = rootRoute.addChildren([indexRoute, patientsRoute, testsRoute, ordersRoute]);
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  patientsRoute,
+  newPatientRoute,
+  editPatientRoute,
+  testsRoute,
+  ordersRoute,
+]);
 
 export function createAppRouter(history?: RouterHistory) {
   return createRouter({ routeTree, ...(history === undefined ? {} : { history }) });

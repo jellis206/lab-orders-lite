@@ -31,7 +31,7 @@ test("the shell navigates between primary workspaces", async () => {
 
   fireEvent.click(screen.getByRole("link", { name: "Patients" }));
   expect(await screen.findByRole("heading", { name: "Patients" })).toBeTruthy();
-  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("API connected"));
+  await waitFor(() => expect(screen.getByText("API connected")).toBeTruthy());
 });
 
 test("mobile navigation exposes an accessible menu control", async () => {
