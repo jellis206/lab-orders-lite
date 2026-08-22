@@ -3,9 +3,11 @@
 ## Original Intent & Prompt
 
 **User Request:**
+
 > "Start implementing all the phases we have left to implement (we should have already done 1 and 2). All the plans for what needs doing can be found in plans/. Make sure you thoroughly test each acceptance criteria. Use Playwright to test against yourself as much as possible. Use web search to look things up when you don't know them and to get updated documentation for things. Do all this work on a new branch so we can validate it and then merge it in if we deem it good. The strategy will be: new branch for implementation, separate commits for changes for each phase, then I can review the code and potentially merge the branch."
 
 **Key Goals:**
+
 1. Implement Phases 3–9 (all remaining functionality)
 2. **Thorough testing** of every acceptance criterion from the plans
 3. Use **Playwright E2E tests** for key workflows (especially primary order creation flow)
@@ -15,13 +17,15 @@
 7. Clean, professional quality — treat as if submitting to a real code review
 
 ## Current Status
+
 - **Branch:** `implement-phases-3-9`
-- **Last Activity:** Phase 3.1 — Patient Contracts (TDD)
-- **Session Context Limit Hit:** Yes, need to restart with fresh context
+- **Last Commit:** Phase 3 — Patients Vertical Slice (4e21b94)
+- **Next:** Phase 4 — Lab Test Catalog
 
 ## Completed Work
 
 ### Phase 1 — Foundation ✅
+
 - Bun workspace setup
 - apps/web, apps/api, packages/contracts, packages/domain created
 - TypeScript, Vite, React, Hono, Drizzle, libSQL configured
@@ -29,61 +33,57 @@
 - Vite proxy configured for /api routes
 
 ### Phase 2 — Database ✅
+
 - Database schema defined (patients, labTests, orders, orderTests tables)
 - Migration generated and committed
 - Database initialization working
 - Seed data structure in place
 
+### Phase 3 — Patients Vertical Slice ✅
+
+**Completed:**
+
+- Patient Zod contracts with normaliz normalization (names trimmed, contact fields optional and null-normalized)
+- Consistent API error contract and shape
+- Searchable, cursor-paginated patient API (list, detail, create, patch)
+- Patient list with URL-backed search and load-more pagination
+- Create/edit forms using TanStack Form and Query
+- All async states (loading, empty, error, validation, not-found, success)
+- Contract, API integration, and React behavior tests
+- No `useEffect` usage
+- **48 tests passing**, `bun run check` passes
+
 ## In Progress
 
-### Phase 3 — Patients Vertical Slice
-**Current Step:** 3.1 — Contracts (TDD)
+### Phase 4 — Lab Test Catalog
 
-**What Was Being Done:**
-Writing patient contract tests in `packages/contracts/src/patients.test.ts` before implementing schemas. This file was created with 50+ test cases covering:
-- createPatientSchema validation (valid/invalid patients, blank names, future DOB, malformed email/phone)
-- patchPatientSchema (partial updates, validation)
-- patientResponseSchema (full and partial responses)
-- patientListQuerySchema (search, limit, pagination)
-- patientListResponseSchema (items, cursors, pagination state)
+**What Needs to Happen:**
 
-**What Needs to Happen Next:**
-1. **Implement patient schemas** in `packages/contracts/src/patients.ts`:
-   - `createPatientSchema` — required: firstName, lastName, dateOfBirth; optional: email, phone
-   - `patchPatientSchema` — all fields optional
-   - `patientResponseSchema` — response with id, timestamps
-   - `patientListQuerySchema` — query params with search, limit (max 50), after cursor
-   - `patientListResponseSchema` — response with items array, nextCursor, hasMore
-   - Helper functions for DOB validation (not in future), email/phone validation, blank string trimming
+1. **Contracts (4.1 — TDD):** Write tests then implement:
+   - `createLabTestSchema` — required: code, name, priceCents, turnaroundHours; optional: active
+   - `patchLabTestSchema` — all fields optional
+   - `labTestResponseSchema` — response with id, timestamps
+   - `labTestListQuerySchema` — search, active filter, limit, pagination
+   - `labTestListResponseSchema` — items array with cursor
+   - Validation: code is unique and non-blank, name non-blank, price ≥ 0, turnaround > 0
 
-2. **Export from contracts index** in `packages/contracts/src/index.ts`
+2. **API read path (4.2 — TDD):** integration tests then implementation:
+   - GET /api/tests with search, active filter, cursor pagination
+   - GET /api/tests/:id
+   - Cursor ordering: (code, id)
 
-3. **Run tests** `bun test packages/contracts/src/patients.test.ts` until all pass
+3. **API write path (4.3 — TDD):** integration tests then implementation:
+   - POST /api/tests (create)
+   - PATCH /api/tests/:id (update, including active toggle)
+   - Unique constraint error handling (409 Conflict)
 
-4. **API implementation** (3.2 — API read path TDD):
-   - Write integration tests in `apps/api/src/patients/patients.test.ts`
-   - List endpoint: GET /api/patients?search=&limit=&after=
-   - Detail endpoint: GET /api/patients/:id
-   - Cursor pagination over (lastName, firstName, id)
-   - Search filtering before pagination
-   - Cursor reset when search changes
-   - Implement queries and thin Hono routes
-
-5. **API write path** (3.3 — API write path TDD):
-   - Integration tests for POST /api/patients (create)
-   - Integration tests for PATCH /api/patients/:id (update)
-   - Validation, timestamps, 404/400 handling
-
-6. **Web implementation** (3.4–3.6):
-   - List page with search/load-more
-   - Create/edit form with validation
-   - Routes: /patients, /patients/new, /patients/$patientId
-   - TanStack Query hooks and mutations
-   - No useEffect usage
+4. **Web list and forms (4.4–4.5 — TDD):** behavior tests then UI:
+   - /tests list with search, active toggle filter, load-more
+   - /tests/new and /tests/:testId forms
+   - TanStack Query/Form/Router, no useEffect
 
 ## Remaining Phases
 
-- **Phase 4** — Lab-test catalog (list, create, edit, exact cents handling)
 - **Phase 5** — Order domain/API (pure logic, transactional creation, snapshots, status rules)
 - **Phase 6** — Order creation UI (searchable selection, previews, validation)
 - **Phase 7** — Order browsing (filters, details, status updates)
@@ -105,6 +105,7 @@ Writing patient contract tests in `packages/contracts/src/patients.test.ts` befo
 ## Testing Strategy
 
 **Per-Phase Approach:**
+
 - **Unit tests** for contracts and pure domain logic (Bun test)
 - **Integration tests** for API with isolated DB (Bun test)
 - **Component tests** only where they add value beyond domain/API tests
@@ -114,6 +115,7 @@ Writing patient contract tests in `packages/contracts/src/patients.test.ts` befo
   - Phase 8: Add comprehensive E2E covering create patient → create order → verify in list
 
 **Acceptance Criteria Verification:**
+
 - Every acceptance criterion from each plan file (plans/03.md–plans/09.md) must have:
   - A failing test written first (red)
   - Implementation code (green)
@@ -122,6 +124,7 @@ Writing patient contract tests in `packages/contracts/src/patients.test.ts` befo
 - Document which criterion maps to which test
 
 **No Arbitrary Coverage:**
+
 - Test acceptance criteria, not implementation details
 - If a test doesn't map to a requirement, don't add it
 - Prefer integration tests over unit tests where both apply
@@ -156,6 +159,7 @@ bun run build             # Build both apps
 **Status:** Not yet created (will be added during Phase 8)
 
 **When Creating Playwright Tests:**
+
 1. Create `apps/web/e2e/` directory with tests
 2. Use `playwright.config.ts` at workspace root or app level
 3. **Key workflows to test:**
@@ -175,22 +179,25 @@ bun run build             # Build both apps
 
 ## Notes for Next Session
 
-1. **File locations are stable** — no need to move anything
-2. **Test files should use isolated test DB** helper from `apps/api/src/test/database.ts`
-3. **Validation patterns**:
-   - DOB: ISO 8601 (YYYY-MM-DD), not in future, not too old
-   - Email: basic RFC5322 via Zod `.email()`
-   - Phone: accept any non-blank string (simple validation)
-   - Names: trim and check length > 0
-4. **Cursor format**: base64-encoded `${lastNameLower}:${firstNameLower}:${id}`
-5. **Cursor limits**: default 20, max 50
-6. **Error responses**: consistent envelope with `code`, `message`, `details` (if applicable)
-7. **Timestamps**: ISO 8601 UTC strings (`new Date().toISOString()`)
-8. **IDs**: use crypto.randomUUID() or similar
+1. **Patterns established in Phase 3:**
+   - **Cursor format:** base64-encoded JSON with search context to prevent cursor misuse across different searches
+   - **Contact field normalization:** blank strings → undefined → null in DB to avoid empty values
+   - **DOB validation:** ISO 8601 calendar date, not in future
+   - **API error shape:** `{ code, message, details? }` consistent across all endpoints
+   - **TanStack Form integration:** field-level validation, no schema validators (use custom onSubmit)
+   - **Query invalidation:** after mutations, invalidate all queries with affected key (e.g., `patientKeys.all`)
+   - **URL search state:** router owns search params, derived from validated schemas
+
+2. **File locations are stable** — no need to move anything
+3. **Test files use isolated test DB** helper from `apps/api/src/test/database.ts`
+4. **Cursor limits:** default 20, max 50
+5. **Timestamps:** ISO 8601 UTC strings (`new Date().toISOString()`)
+6. **IDs:** use crypto.randomUUID()
 
 ## Commit Strategy (Per Original Plan)
 
 **One commit per phase means:**
+
 - Phase 3 (Patients): Single commit when all of 3.1–3.6 pass tests
 - Phase 4 (Lab tests): Single commit when all of 4.1–4.5 pass tests
 - Phase 5 (Order domain/API): Single commit when all API + domain logic tested
@@ -200,6 +207,7 @@ bun run build             # Build both apps
 - Phase 9 (Docs): Single commit with README, setup validation, final cleanup
 
 **Before each commit:**
+
 ```bash
 bun run check             # typecheck + lint + test + build must all pass
 git diff --stat          # Review what changed
@@ -207,6 +215,7 @@ bun run lint:no-use-effect # Verify no useEffect in React code
 ```
 
 **Commit message format:**
+
 ```
 feat(phase-X): descriptive title
 
@@ -217,17 +226,36 @@ feat(phase-X): descriptive title
 ```
 
 ## Git Status
+
 Current branch: `implement-phases-3-9`
 Uncommitted work: Only `PROGRESS.md` and `packages/contracts/src/patients.test.ts` exist; no implementation yet.
 
-When resuming:
+When resuming Phase 4:
+
 ```bash
-git status                 # Verify clean state
-bun test packages/contracts # Verify tests fail (expected)
-# Implement patients.ts schemas to make tests pass, then move to 3.2
+git status                 # Verify clean state (should be clean from Phase 3 commit)
+bun dev                    # Ensure db/api/web start cleanly
+bun test packages/contracts # Verify existing tests still pass
+bun run check              # Verify Phase 3 is stable
+# Start with plans/04-lab-tests.md acceptance criteria
+# Write contract tests first, implement schemas, then API, then UI
 ```
 
 ## Quality Checklist Before Marking Phase Complete
+
+### Phase 3 ✅
+
+- [x] All acceptance criteria from plan tested (automated or manual)
+- [x] `bun run check` passes (format, lint, typecheck, test, build)
+- [x] No `useEffect` in React source (`bun run lint:no-use-effect` clean)
+- [x] All async UI states represented (loading, error, empty, success)
+- [x] All error paths have useful feedback
+- [x] Keyboard navigation works for forms/lists (native inputs + form submission)
+- [x] Mobile layout tested (narrow viewport — app-shell responsive)
+- [x] Long content doesn't break UI
+- [x] Ready for code review
+
+### Phase 4 (To Do)
 
 - [ ] All acceptance criteria from plan tested (automated or manual)
 - [ ] `bun run check` passes (format, lint, typecheck, test, build)
