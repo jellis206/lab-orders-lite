@@ -8,10 +8,11 @@ import { calculateEstimatedReadyAt, calculateOrderTotal } from "@lab-orders/doma
 import { useForm } from "@tanstack/react-form";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 import { ApiRequestError } from "../../api/client";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
+import { LoadMore } from "../../components/load-more";
 import { labTestListOptions } from "../lab-tests/api";
 import { patientListOptions } from "../patients/api";
 import { createOrder, orderKeys } from "./api";
@@ -31,6 +32,8 @@ export function OrderForm() {
   const [testQuery, setTestQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<PatientResponse>();
   const [selectedTests, setSelectedTests] = useState<LabTestResponse[]>([]);
+  const patientListRef = useRef<HTMLDivElement>(null);
+  const testCatalogRef = useRef<HTMLDivElement>(null);
   const patients = useInfiniteQuery(patientListOptions(patientQuery));
   const tests = useInfiniteQuery(labTestListOptions(testQuery, true));
   const mutation = useMutation({
@@ -174,32 +177,38 @@ export function OrderForm() {
                       Patients could not be loaded. {patients.error.message}
                     </p>
                   ) : (
-                    <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
-                      {patientResults.map((patient) => (
-                        <li key={patient.id}>
-                          <button
-                            type="button"
-                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-app-hover"
-                            onClick={() => selectPatient(patient)}
-                          >
-                            <span className="font-medium text-app-text">
-                              {patient.lastName}, {patient.firstName}
-                            </span>
-                            <span className="text-sm text-app-muted">{patient.dateOfBirth}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {patients.hasNextPage && (
-                    <Button
-                      type="button"
-                      className="mt-3"
-                      disabled={patients.isFetchingNextPage}
-                      onClick={() => void patients.fetchNextPage()}
+                    <div
+                      ref={patientListRef}
+                      className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Patients"
                     >
-                      {patients.isFetchingNextPage ? "Loading…" : "Load more patients"}
-                    </Button>
+                      <ul className="divide-y divide-app-border">
+                        {patientResults.map((patient) => (
+                          <li key={patient.id}>
+                            <button
+                              type="button"
+                              className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-app-hover"
+                              onClick={() => selectPatient(patient)}
+                            >
+                              <span className="font-medium text-app-text">
+                                {patient.lastName}, {patient.firstName}
+                              </span>
+                              <span className="text-sm text-app-muted">{patient.dateOfBirth}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <LoadMore
+                        hasNextPage={Boolean(patients.hasNextPage)}
+                        isFetchingNextPage={patients.isFetchingNextPage}
+                        onLoadMore={() => void patients.fetchNextPage()}
+                        label="Load more patients"
+                        showEnd={false}
+                        root={patientListRef}
+                      />
+                    </div>
                   )}
                 </>
               )}
@@ -248,41 +257,47 @@ export function OrderForm() {
                   Lab tests could not be loaded. {tests.error.message}
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
-                  {testResults.map((test) => {
-                    const checked = selectedTests.some((item) => item.id === test.id);
-                    return (
-                      <li key={test.id}>
-                        <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-app-hover">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleTest(test)}
-                            className="mt-1 size-4 rounded border-app-border text-blue-600 focus:ring-blue-600"
-                          />
-                          <span>
-                            <span className="block font-medium text-app-text">
-                              {test.code} · {test.name}
-                            </span>
-                            <span className="text-sm text-app-muted">
-                              {formatCents(test.priceCents)} · {test.turnaroundHours} hours
-                            </span>
-                          </span>
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              {tests.hasNextPage && (
-                <Button
-                  type="button"
-                  className="mt-3"
-                  disabled={tests.isFetchingNextPage}
-                  onClick={() => void tests.fetchNextPage()}
+                <div
+                  ref={testCatalogRef}
+                  className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Active lab tests"
                 >
-                  {tests.isFetchingNextPage ? "Loading…" : "Load more tests"}
-                </Button>
+                  <ul className="divide-y divide-app-border">
+                    {testResults.map((test) => {
+                      const checked = selectedTests.some((item) => item.id === test.id);
+                      return (
+                        <li key={test.id}>
+                          <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-app-hover">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleTest(test)}
+                              className="mt-1 size-4 rounded border-app-border text-blue-600 focus:ring-blue-600"
+                            />
+                            <span>
+                              <span className="block font-medium text-app-text">
+                                {test.code} · {test.name}
+                              </span>
+                              <span className="text-sm text-app-muted">
+                                {formatCents(test.priceCents)} · {test.turnaroundHours} hours
+                              </span>
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <LoadMore
+                    hasNextPage={Boolean(tests.hasNextPage)}
+                    isFetchingNextPage={tests.isFetchingNextPage}
+                    onLoadMore={() => void tests.fetchNextPage()}
+                    label="Load more tests"
+                    showEnd={false}
+                    root={testCatalogRef}
+                  />
+                </div>
               )}
               {selectedTests.length > 0 && (
                 <div className="mt-5">
