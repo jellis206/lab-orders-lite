@@ -11,22 +11,27 @@
     "dev:api": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun run --cwd apps/api dev",
     "dev:web": "bun run --cwd apps/web dev",
     "build": "bun run --filter './apps/*' build",
-    "test": "bun test",
+    "test": "bun test apps/api apps/web/src packages",
     "typecheck": "bun run --filter '*' typecheck",
-    "lint": "oxlint apps packages && bun run lint:no-use-effect",
+    "lint": "bun scripts/lint.ts && bun run lint:no-use-effect",
     "lint:no-use-effect": "! grep -R -n -E '\\buseEffect\\b' apps/web/src --include='*.ts' --include='*.tsx'",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
-    "check": "bun run typecheck && bun run lint && bun test && bun run build",
+    "check": "bun run typecheck && bun run lint && bun run test && bun run build",
+    "e2e": "playwright test",
+    "e2e:headed": "playwright test --headed",
     "db:dev": "mkdir -p .data && turso dev --db-file .data/lab-orders.db --port 8080",
     "db:generate": "bun run --cwd apps/api db:generate",
-    "db:migrate": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun run --cwd apps/api db:migrate",
-    "db:seed": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun run --cwd apps/api db:seed",
+    "db:migrate": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-migrate.ts",
+    "db:seed": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-seed.ts",
+    "db:seed-large": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-seed-large.ts",
     "db:studio": "bun run --cwd apps/api db:studio"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.79.0",
+    "@playwright/test": "^1.62.1",
     "concurrently": "^10.0.5",
     "oxfmt": "^0.64.0",
-    "oxlint": "^1.79.0"
+    "oxlint": "1.79.0"
   }
 }

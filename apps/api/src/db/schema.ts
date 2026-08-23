@@ -1,3 +1,4 @@
+import { orderStatuses } from "@lab-orders/domain";
 import { sql } from "drizzle-orm";
 import {
   check,
@@ -8,6 +9,8 @@ import {
   text,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
+
+export { orderStatuses, type OrderStatus } from "@lab-orders/domain";
 
 const timestamp = (name: string) => text(name).notNull();
 
@@ -61,9 +64,6 @@ export const labTests = sqliteTable(
     index("lab_tests_active_name_cursor_idx").on(table.active, sql`lower(${table.name})`, table.id),
   ],
 );
-
-export const orderStatuses = ["pending", "in_progress", "completed", "cancelled"] as const;
-export type OrderStatus = (typeof orderStatuses)[number];
 
 export const orders = sqliteTable(
   "orders",

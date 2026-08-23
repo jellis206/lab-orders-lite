@@ -4,10 +4,10 @@ import type { AppConfig } from "../config";
 import * as schema from "./schema";
 
 export function createDatabase(config: Pick<AppConfig, "databaseUrl" | "authToken">) {
-  const client = createClient({
-    url: config.databaseUrl,
-    ...(config.authToken === undefined ? {} : { authToken: config.authToken }),
-  });
+  const client =
+    config.authToken === undefined
+      ? createClient({ url: config.databaseUrl })
+      : createClient({ url: config.databaseUrl, authToken: config.authToken });
 
   return {
     client,

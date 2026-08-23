@@ -4,14 +4,11 @@ import { RouterProvider } from "@tanstack/react-router";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "./query-client";
 import { createTestRouter } from "./router";
+import { installFetchMock } from "./test/fetch";
 
-globalThis.fetch = Object.assign(
-  async () =>
-    new Response(JSON.stringify({ status: "ok" }), {
-      headers: { "content-type": "application/json" },
-    }),
-  { preconnect() {} },
-) as typeof fetch;
+installFetchMock(() =>
+  Response.json({ status: "ok", service: "lab-orders-api" }),
+);
 
 function renderApp(path = "/") {
   const router = createTestRouter(path);
@@ -31,7 +28,7 @@ test("the shell navigates between primary workspaces", async () => {
 
   fireEvent.click(screen.getByRole("link", { name: "Patients" }));
   expect(await screen.findByRole("heading", { name: "Patients" })).toBeTruthy();
-  await waitFor(() => expect(screen.getByRole("status").textContent).toContain("API connected"));
+  await waitFor(() => expect(screen.getByText("API connected")).toBeTruthy());
 });
 
 test("mobile navigation exposes an accessible menu control", async () => {

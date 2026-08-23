@@ -9,7 +9,7 @@ The plan is based on:
 - [`../orig_instructions.md`](../orig_instructions.md) — assignment acceptance criteria
 - [`../project.md`](../project.md) — selected stack, architecture, domain rules, and scope
 
-The repository currently contains an uncommitted Bun workspace, minimal Hono scaffold, stock Vite/React scaffold, and empty `contracts` and `domain` packages. There is no Git history yet.
+The repository now has its application and persistence foundation in place: a normalized Bun workspace, tested Hono and React shells, shared contract/domain packages, local Turso development, a constrained Drizzle schema, committed migrations, and deterministic seed data. The remaining tickets build the patient, catalog, and order vertical slices on that foundation.
 
 ## Delivery principles
 
