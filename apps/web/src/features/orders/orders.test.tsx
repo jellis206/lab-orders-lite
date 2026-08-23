@@ -262,6 +262,36 @@ test("distinguishes an empty catalog from empty filtered results", async () => {
   expect(await screen.findByRole("heading", { name: "No matching orders" })).toBeTruthy();
 });
 
+test("loads additional order pages from the next cursor", async () => {
+  const summary = (({ tests: _unused, ...rest }) => rest)(createdOrder);
+  mockFetch((url) => {
+    if (url.includes("after=cursor-1")) {
+      return Response.json({ items: [], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/orders")) {
+      return Response.json({ items: [summary], nextCursor: "cursor-1", hasMore: true });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders");
+  fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+  await waitFor(() =>
+    expect(requests.some(({ url }) => url.includes("after=cursor-1"))).toBe(true),
+  );
+});
+
+test("announces the end of the order list", async () => {
+  const summary = (({ tests: _unused, ...rest }) => rest)(createdOrder);
+  mockFetch((url) => {
+    if (url.startsWith("/api/orders")) {
+      return Response.json({ items: [summary], nextCursor: null, hasMore: false });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders");
+  expect(await screen.findByText("End of results")).toBeTruthy();
+});
+
 test("starts a pending order and requires confirmation to cancel", async () => {
   let current = { ...createdOrder, status: "pending" as const };
   mockFetch((url, init) => {

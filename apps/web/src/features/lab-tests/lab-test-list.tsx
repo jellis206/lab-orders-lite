@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
+import { LoadMore } from "../../components/load-more";
 import { Listbox, ListboxOption } from "../../components/listbox";
 import { labTestListOptions } from "./api";
 
@@ -66,7 +67,7 @@ export function LabTestListPage() {
           <Button type="submit">Search</Button>
         </form>
         <div className="w-full sm:w-44">
-          <label className="text-sm font-medium text-app-text" htmlFor="lab-test-active">
+          <label className="mb-1 block text-sm font-medium text-app-text" htmlFor="lab-test-active">
             Status
           </label>
           <Listbox
@@ -82,7 +83,6 @@ export function LabTestListPage() {
                 }),
               });
             }}
-            className="mt-1"
           >
             <ListboxOption value="all">All tests</ListboxOption>
             <ListboxOption value="true">Active</ListboxOption>
@@ -156,16 +156,11 @@ export function LabTestListPage() {
               </tbody>
             </table>
           </div>
-          {query.hasNextPage && (
-            <div className="mt-5 text-center">
-              <Button
-                disabled={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {query.isFetchingNextPage ? "Loading…" : "Load more"}
-              </Button>
-            </div>
-          )}
+          <LoadMore
+            hasNextPage={Boolean(query.hasNextPage)}
+            isFetchingNextPage={query.isFetchingNextPage}
+            onLoadMore={() => void query.fetchNextPage()}
+          />
         </>
       )}
     </section>

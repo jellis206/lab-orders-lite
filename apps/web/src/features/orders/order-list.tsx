@@ -1,8 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import { useEffect, useRef, type FormEvent } from "react";
+import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
+import { LoadMore } from "../../components/load-more";
 import { Listbox, ListboxOption } from "../../components/listbox";
 import { formatCents } from "@lab-orders/contracts";
 import { orderStatuses } from "@lab-orders/domain";
@@ -24,26 +25,6 @@ export function OrderListPage() {
   const navigate = useNavigate({ from: "/orders" });
   const query = useInfiniteQuery(orderListOptions(search ?? "", status));
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
-  const sentinelRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const sentinel = sentinelRef.current;
-    if (!sentinel || !query.hasNextPage) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry?.isIntersecting && !query.isFetchingNextPage) {
-          void query.fetchNextPage();
-        }
-      },
-      { threshold: 0.5 }
-    );
-
-    observer.observe(sentinel);
-    return () => {
-      observer.disconnect();
-    };
-  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -91,8 +72,8 @@ export function OrderListPage() {
           />
           <Button type="submit">Search</Button>
         </form>
-        <fieldset className="w-full sm:w-48">
-          <label className="text-sm font-medium text-app-text block mb-1" htmlFor="order-status">
+        <div className="w-full sm:w-48">
+          <label className="mb-1 block text-sm font-medium text-app-text" htmlFor="order-status">
             Status
           </label>
           <Listbox
@@ -108,7 +89,6 @@ export function OrderListPage() {
                 }),
               });
             }}
-            className=""
           >
             <ListboxOption value="all">All statuses</ListboxOption>
             {statuses.map((value) => (
@@ -117,7 +97,7 @@ export function OrderListPage() {
               </ListboxOption>
             ))}
           </Listbox>
-        </fieldset>
+        </div>
         {(search || status) && (
           <button
             type="button"
@@ -155,7 +135,7 @@ export function OrderListPage() {
           </p>
         </div>
       ) : (
-        <div>
+        <>
           <div className="mt-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-app-border bg-app-hover text-xs uppercase tracking-wide text-zinc-500">
@@ -192,19 +172,12 @@ export function OrderListPage() {
               </tbody>
             </table>
           </div>
-          {query.hasNextPage && (
-            <div
-              ref={sentinelRef}
-              className="mt-5 flex justify-center py-4"
-              role="status"
-              aria-live="polite"
-            >
-              {query.isFetchingNextPage && (
-                <span className="text-sm text-app-muted">Loading more orders…</span>
-              )}
-            </div>
-          )}
-        </div>
+          <LoadMore
+            hasNextPage={Boolean(query.hasNextPage)}
+            isFetchingNextPage={query.isFetchingNextPage}
+            onLoadMore={() => void query.fetchNextPage()}
+          />
+        </>
       )}
     </section>
   );
