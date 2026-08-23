@@ -4,6 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "../../query-client";
 import { createTestRouter } from "../../router";
+import { installFetchMock } from "../../test/fetch";
 
 const tests = [
   {
@@ -25,17 +26,13 @@ afterEach(() => {
 });
 
 function mockFetch(handler?: (url: string, init?: RequestInit) => Response | Promise<Response>) {
-  globalThis.fetch = Object.assign(
-    async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      requests.push({ url, init });
-      if (url === "/api/health") return Response.json({ status: "ok" });
-      return (
-        handler?.(url, init) ?? Response.json({ items: tests, nextCursor: null, hasMore: false })
-      );
-    },
-    { preconnect() {} },
-  ) as typeof fetch;
+  installFetchMock(async (url, init) => {
+    requests.push({ url, init });
+    if (url === "/api/health") {
+      return Response.json({ status: "ok", service: "lab-orders-api" });
+    }
+    return handler?.(url, init) ?? Response.json({ items: tests, nextCursor: null, hasMore: false });
+  });
 }
 
 function renderApp(path: string) {

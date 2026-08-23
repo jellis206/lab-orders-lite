@@ -8,6 +8,14 @@ import { orderListOptions } from "./api";
 import { formatDateTime, formatMoney, formatStatus } from "./format";
 
 const statuses = ["pending", "in_progress", "completed", "cancelled"] as const;
+type OrderStatusFilter = (typeof statuses)[number];
+
+function parseOrderStatusFilter(value: string): OrderStatusFilter | undefined {
+  for (const status of statuses) {
+    if (status === value) return status;
+  }
+  return undefined;
+}
 
 export function OrderListPage() {
   const { search, status } = useSearch({ from: "/orders" });
@@ -73,9 +81,7 @@ export function OrderListPage() {
               void navigate({
                 search: (previous) => ({
                   ...previous,
-                  status: statuses.includes(next as (typeof statuses)[number])
-                    ? (next as (typeof statuses)[number])
-                    : undefined,
+                  status: parseOrderStatusFilter(next),
                 }),
               });
             }}

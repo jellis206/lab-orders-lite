@@ -251,12 +251,13 @@ export function LabTestForm({ labTest }: { labTest?: LabTestResponse }) {
         <button
           type="button"
           className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
-          onClick={() =>
-            void navigate({
-              to: labTest ? "/tests/$testId" : "/tests",
-              ...(labTest ? { params: { testId: labTest.id } } : {}),
-            })
-          }
+          onClick={() => {
+            if (labTest) {
+              void navigate({ to: "/tests/$testId", params: { testId: labTest.id } });
+              return;
+            }
+            void navigate({ to: "/tests" });
+          }}
         >
           Cancel
         </button>

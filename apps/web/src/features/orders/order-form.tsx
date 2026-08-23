@@ -21,6 +21,8 @@ type FormValues = {
   testIds: string[];
 };
 
+const emptyTestIds: string[] = [];
+
 export function OrderForm() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -39,7 +41,7 @@ export function OrderForm() {
   });
 
   const form = useForm({
-    defaultValues: { patientId: "", testIds: [] as string[] },
+    defaultValues: { patientId: "", testIds: emptyTestIds },
     validators: {
       onSubmit: ({ value }) => {
         const parsed = createOrderSchema.safeParse(value);

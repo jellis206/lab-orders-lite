@@ -4,6 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "../../query-client";
 import { createTestRouter } from "../../router";
+import { installFetchMock } from "../../test/fetch";
 
 const patient = {
   id: "patient-ada",
@@ -66,23 +67,21 @@ afterEach(() => {
 });
 
 function mockFetch(handler?: (url: string, init?: RequestInit) => Response | Promise<Response>) {
-  globalThis.fetch = Object.assign(
-    async (input: RequestInfo | URL, init?: RequestInit) => {
-      const url = String(input);
-      requests.push({ url, init });
-      if (url === "/api/health") return Response.json({ status: "ok" });
-      if (handler) return handler(url, init);
-      if (url.startsWith("/api/patients")) {
-        return Response.json({ items: [patient], nextCursor: null, hasMore: false });
-      }
-      if (url.startsWith("/api/tests")) {
-        return Response.json({ items: tests, nextCursor: null, hasMore: false });
-      }
-      if (url === "/api/orders/order-1") return Response.json(createdOrder);
-      return Response.json({ items: [], nextCursor: null, hasMore: false });
-    },
-    { preconnect() {} },
-  ) as typeof fetch;
+  installFetchMock(async (url, init) => {
+    requests.push({ url, init });
+    if (url === "/api/health") {
+      return Response.json({ status: "ok", service: "lab-orders-api" });
+    }
+    if (handler) return handler(url, init);
+    if (url.startsWith("/api/patients")) {
+      return Response.json({ items: [patient], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/tests")) {
+      return Response.json({ items: tests, nextCursor: null, hasMore: false });
+    }
+    if (url === "/api/orders/order-1") return Response.json(createdOrder);
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
 }
 
 function renderApp(path: string) {

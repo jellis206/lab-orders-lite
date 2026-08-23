@@ -5,6 +5,19 @@ import { forwardRef } from "react";
 const dateTypes = ["date", "datetime-local", "month", "time", "week"] as const;
 type DateType = (typeof dateTypes)[number];
 
+function isDateType(value: string): value is DateType {
+  switch (value) {
+    case "date":
+    case "datetime-local":
+    case "month":
+    case "time":
+    case "week":
+      return true;
+    default:
+      return false;
+  }
+}
+
 export const Input = forwardRef(function Input(
   {
     className,
@@ -31,7 +44,7 @@ export const Input = forwardRef(function Input(
         {...props}
         className={clsx([
           props.type &&
-            (dateTypes as readonly string[]).includes(props.type) && [
+            isDateType(props.type) && [
               "[&::-webkit-datetime-edit-fields-wrapper]:p-0",
               "[&::-webkit-date-and-time-value]:min-h-[1.5em]",
               "[&::-webkit-datetime-edit]:inline-flex",

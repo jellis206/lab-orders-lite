@@ -27,5 +27,5 @@ export function nextOrderStatuses(status: OrderStatus): readonly OrderStatus[] {
 }
 
 export function canTransitionOrderStatus(from: OrderStatus, to: OrderStatus) {
-  return (transitions[from] as readonly OrderStatus[]).includes(to);
+  return nextOrderStatuses(from).some((status) => status === to);
 }

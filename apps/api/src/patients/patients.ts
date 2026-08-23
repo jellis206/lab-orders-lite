@@ -2,7 +2,6 @@ import {
   createPatientSchema,
   patchPatientSchema,
   patientListQuerySchema,
-  type ApiError,
   type PatientListResponse,
   type PatientResponse,
 } from "@lab-orders/contracts";
@@ -11,6 +10,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { patients } from "../db/schema";
+import { apiError, readRequestJson, toApiErrorIssues } from "../http";
 
 const cursorSchema = z.object({
   search: z.string(),
@@ -48,18 +48,6 @@ function toResponse(row: typeof patients.$inferSelect): PatientResponse {
   };
 }
 
-function error(code: string, message: string, details?: unknown): ApiError {
-  return { code, message, ...(details === undefined ? {} : { details }) };
-}
-
-async function requestJson(context: { req: { json: () => Promise<unknown> } }) {
-  try {
-    return { data: await context.req.json() } as const;
-  } catch {
-    return { error: error("INVALID_JSON", "Request body must be valid JSON") } as const;
-  }
-}
-
 export function createPatientRoutes(db: AppDatabase) {
   const app = new Hono();
 
@@ -67,7 +55,7 @@ export function createPatientRoutes(db: AppDatabase) {
     const parsed = patientListQuerySchema.safeParse(context.req.query());
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Query validation failed", parsed.error.issues),
+        apiError("VALIDATION_ERROR", "Query validation failed", toApiErrorIssues(parsed.error.issues)),
         400,
       );
     }
@@ -75,7 +63,7 @@ export function createPatientRoutes(db: AppDatabase) {
     const search = parsed.data.search?.toLocaleLowerCase() ?? "";
     const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
     if (parsed.data.after && (!cursor || cursor.search !== search)) {
-      return context.json(error("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
+      return context.json(apiError("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
     }
 
     const searchCondition = search
@@ -127,25 +115,27 @@ export function createPatientRoutes(db: AppDatabase) {
     const row = await db.query.patients.findFirst({
       where: eq(patients.id, context.req.param("id")),
     });
-    if (!row) return context.json(error("PATIENT_NOT_FOUND", "Patient not found"), 404);
+    if (!row) return context.json(apiError("PATIENT_NOT_FOUND", "Patient not found"), 404);
     return context.json(toResponse(row));
   });
 
   app.post("/", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = createPatientSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError("VALIDATION_ERROR", "Request validation failed", toApiErrorIssues(parsed.error.issues)),
         422,
       );
     }
 
     const now = new Date().toISOString();
-    const row: typeof patients.$inferInsert = {
+    const row: typeof patients.$inferSelect = {
       id: crypto.randomUUID(),
-      ...parsed.data,
+      firstName: parsed.data.firstName,
+      lastName: parsed.data.lastName,
+      dateOfBirth: parsed.data.dateOfBirth,
       email: parsed.data.email ?? null,
       phone: parsed.data.phone ?? null,
       createdAt: now,
@@ -153,16 +143,16 @@ export function createPatientRoutes(db: AppDatabase) {
     };
     await db.insert(patients).values(row);
     context.header("Location", `/api/patients/${row.id}`);
-    return context.json(toResponse(row as typeof patients.$inferSelect), 201);
+    return context.json(toResponse(row), 201);
   });
 
   app.patch("/:id", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = patchPatientSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError("VALIDATION_ERROR", "Request validation failed", toApiErrorIssues(parsed.error.issues)),
         422,
       );
     }
@@ -170,18 +160,22 @@ export function createPatientRoutes(db: AppDatabase) {
     const existing = await db.query.patients.findFirst({
       where: eq(patients.id, context.req.param("id")),
     });
-    if (!existing) return context.json(error("PATIENT_NOT_FOUND", "Patient not found"), 404);
+    if (!existing) return context.json(apiError("PATIENT_NOT_FOUND", "Patient not found"), 404);
 
-    const changes = {
+    const changes: Partial<typeof patients.$inferSelect> & { updatedAt: string } = {
       ...parsed.data,
-      ...(Object.hasOwn(parsed.data, "email") ? { email: parsed.data.email ?? null } : {}),
-      ...(Object.hasOwn(parsed.data, "phone") ? { phone: parsed.data.phone ?? null } : {}),
       updatedAt: new Date().toISOString(),
     };
+    if (Object.hasOwn(parsed.data, "email")) {
+      changes.email = parsed.data.email ?? null;
+    }
+    if (Object.hasOwn(parsed.data, "phone")) {
+      changes.phone = parsed.data.phone ?? null;
+    }
     const next = { ...existing, ...changes };
     if (!next.email && !next.phone) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", [
+        apiError("VALIDATION_ERROR", "Request validation failed", [
           { path: ["email"], message: "Provide an email or phone number so we can share results" },
         ]),
         422,

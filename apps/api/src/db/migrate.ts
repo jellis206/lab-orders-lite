@@ -5,7 +5,7 @@ import { createDatabase } from "./client";
 export async function migrateDatabase(databaseUrl: string, authToken?: string) {
   const { client, db } = createDatabase({
     databaseUrl,
-    ...(authToken === undefined ? {} : { authToken }),
+    authToken,
   });
   try {
     await migrate(db, {

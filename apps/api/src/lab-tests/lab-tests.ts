@@ -2,7 +2,6 @@ import {
   createLabTestSchema,
   patchLabTestSchema,
   labTestListQuerySchema,
-  type ApiError,
   type LabTestListResponse,
   type LabTestResponse,
 } from "@lab-orders/contracts";
@@ -11,6 +10,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { labTests } from "../db/schema";
+import { apiError, readRequestJson, toApiErrorIssues } from "../http";
 
 const cursorSchema = z.object({
   search: z.string(),
@@ -48,10 +48,6 @@ function toResponse(row: typeof labTests.$inferSelect): LabTestResponse {
   };
 }
 
-function error(code: string, message: string, details?: unknown): ApiError {
-  return { code, message, ...(details === undefined ? {} : { details }) };
-}
-
 function isUniqueCodeError(cause: unknown) {
   let current = cause;
   while (current) {
@@ -67,14 +63,6 @@ function isUniqueCodeError(cause: unknown) {
   return false;
 }
 
-async function requestJson(context: { req: { json: () => Promise<unknown> } }) {
-  try {
-    return { data: await context.req.json() } as const;
-  } catch {
-    return { error: error("INVALID_JSON", "Request body must be valid JSON") } as const;
-  }
-}
-
 export function createLabTestRoutes(db: AppDatabase) {
   const app = new Hono();
 
@@ -82,7 +70,11 @@ export function createLabTestRoutes(db: AppDatabase) {
     const parsed = labTestListQuerySchema.safeParse(context.req.query());
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Query validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Query validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         400,
       );
     }
@@ -95,7 +87,7 @@ export function createLabTestRoutes(db: AppDatabase) {
       parsed.data.after &&
       (!cursor || cursor.search !== search || cursor.active !== activeFilter)
     ) {
-      return context.json(error("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
+      return context.json(apiError("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
     }
 
     const searchCondition = search
@@ -142,25 +134,33 @@ export function createLabTestRoutes(db: AppDatabase) {
     const row = await db.query.labTests.findFirst({
       where: eq(labTests.id, context.req.param("id")),
     });
-    if (!row) return context.json(error("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
+    if (!row) return context.json(apiError("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
     return context.json(toResponse(row));
   });
 
   app.post("/", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = createLabTestSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }
 
     const now = new Date().toISOString();
-    const row: typeof labTests.$inferInsert = {
+    const row: typeof labTests.$inferSelect = {
       id: crypto.randomUUID(),
-      ...parsed.data,
+      code: parsed.data.code,
+      name: parsed.data.name,
+      priceCents: parsed.data.priceCents,
+      turnaroundHours: parsed.data.turnaroundHours,
+      active: parsed.data.active,
       createdAt: now,
       updatedAt: now,
     };
@@ -169,23 +169,27 @@ export function createLabTestRoutes(db: AppDatabase) {
     } catch (cause) {
       if (isUniqueCodeError(cause)) {
         return context.json(
-          error("DUPLICATE_CODE", "A lab test with this code already exists"),
+          apiError("DUPLICATE_CODE", "A lab test with this code already exists"),
           409,
         );
       }
       throw cause;
     }
     context.header("Location", `/api/tests/${row.id}`);
-    return context.json(toResponse(row as typeof labTests.$inferSelect), 201);
+    return context.json(toResponse(row), 201);
   });
 
   app.patch("/:id", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = patchLabTestSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }
@@ -193,7 +197,7 @@ export function createLabTestRoutes(db: AppDatabase) {
     const existing = await db.query.labTests.findFirst({
       where: eq(labTests.id, context.req.param("id")),
     });
-    if (!existing) return context.json(error("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
+    if (!existing) return context.json(apiError("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
 
     const changes = {
       ...parsed.data,
@@ -204,7 +208,7 @@ export function createLabTestRoutes(db: AppDatabase) {
     } catch (cause) {
       if (isUniqueCodeError(cause)) {
         return context.json(
-          error("DUPLICATE_CODE", "A lab test with this code already exists"),
+          apiError("DUPLICATE_CODE", "A lab test with this code already exists"),
           409,
         );
       }

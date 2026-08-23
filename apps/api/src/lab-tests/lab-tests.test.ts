@@ -1,3 +1,8 @@
+import {
+  apiErrorSchema,
+  labTestListResponseSchema,
+  labTestResponseSchema,
+} from "@lab-orders/contracts";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createApp } from "../app";
 import { labTests } from "../db/schema";
@@ -46,73 +51,91 @@ afterEach(async () => database.cleanup());
 
 async function json(path: string, init?: RequestInit) {
   const response = await app.request(path, init);
-  return { response, body: (await response.json()) as Record<string, unknown> };
+  return { response, body: await response.json() };
+}
+
+function requireCursor(nextCursor: string | null) {
+  if (nextCursor === null) {
+    throw new Error("expected a pagination cursor");
+  }
+  return nextCursor;
 }
 
 describe("lab test reads", () => {
   test("lists tests in deterministic code order with cursor pagination", async () => {
     const first = await json("/api/tests?limit=2");
+    const firstBody = labTestListResponseSchema.parse(first.body);
     expect(first.response.status).toBe(200);
-    expect((first.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
-      "t-cbc",
-      "t-cmp",
-    ]);
-    expect(first.body.hasMore).toBe(true);
+    expect(firstBody.items.map((item) => item.id)).toEqual(["t-cbc", "t-cmp"]);
+    expect(firstBody.hasMore).toBe(true);
 
     const second = await json(
-      `/api/tests?limit=2&after=${encodeURIComponent(first.body.nextCursor as string)}`,
+      `/api/tests?limit=2&after=${encodeURIComponent(requireCursor(firstBody.nextCursor))}`,
     );
-    expect((second.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual(["t-tsh"]);
-    expect(second.body).toMatchObject({ hasMore: false, nextCursor: null });
+    const secondBody = labTestListResponseSchema.parse(second.body);
+    expect(secondBody.items.map((item) => item.id)).toEqual(["t-tsh"]);
+    expect(secondBody).toMatchObject({ hasMore: false, nextCursor: null });
   });
 
   test("searches code and name before pagination", async () => {
     const byCode = await json("/api/tests?search=cbc");
-    expect((byCode.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual(["t-cbc"]);
+    expect(labTestListResponseSchema.parse(byCode.body).items.map((item) => item.id)).toEqual([
+      "t-cbc",
+    ]);
 
     const byName = await json("/api/tests?search=metabolic&limit=1");
-    expect((byName.body.items as Array<{ id: string }>)[0]?.id).toBe("t-cmp");
+    expect(labTestListResponseSchema.parse(byName.body).items[0]?.id).toBe("t-cmp");
   });
 
   test("filters by active status before pagination", async () => {
     const active = await json("/api/tests?active=true");
-    expect((active.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
+    expect(labTestListResponseSchema.parse(active.body).items.map((item) => item.id)).toEqual([
       "t-cbc",
       "t-cmp",
     ]);
     const inactive = await json("/api/tests?active=false");
-    expect((inactive.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
+    expect(labTestListResponseSchema.parse(inactive.body).items.map((item) => item.id)).toEqual([
       "t-tsh",
     ]);
   });
 
   test("composes search and active filters", async () => {
     const result = await json("/api/tests?search=complete&active=true");
-    expect((result.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual(["t-cbc"]);
+    expect(labTestListResponseSchema.parse(result.body).items.map((item) => item.id)).toEqual([
+      "t-cbc",
+    ]);
   });
 
   test("rejects malformed and filter-mismatched cursors", async () => {
     expect((await json("/api/tests?after=bad-cursor")).response.status).toBe(400);
 
     const searched = await json("/api/tests?search=c&limit=1");
+    const searchedBody = labTestListResponseSchema.parse(searched.body);
     const searchMismatch = await json(
-      `/api/tests?search=tsh&after=${encodeURIComponent(searched.body.nextCursor as string)}`,
+      `/api/tests?search=tsh&after=${encodeURIComponent(requireCursor(searchedBody.nextCursor))}`,
     );
     expect(searchMismatch.response.status).toBe(400);
-    expect(searchMismatch.body).toMatchObject({ code: "INVALID_CURSOR" });
+    expect(apiErrorSchema.parse(searchMismatch.body)).toMatchObject({ code: "INVALID_CURSOR" });
 
     const active = await json("/api/tests?active=true&limit=1");
+    const activeBody = labTestListResponseSchema.parse(active.body);
     const activeMismatch = await json(
-      `/api/tests?active=false&after=${encodeURIComponent(active.body.nextCursor as string)}`,
+      `/api/tests?active=false&after=${encodeURIComponent(requireCursor(activeBody.nextCursor))}`,
     );
     expect(activeMismatch.response.status).toBe(400);
   });
 
   test("gets a test and returns a consistent not-found error", async () => {
-    expect((await json("/api/tests/t-cbc")).body).toMatchObject({ id: "t-cbc", code: "CBC" });
+    expect(labTestResponseSchema.parse((await json("/api/tests/t-cbc")).body)).toMatchObject({
+      id: "t-cbc",
+      code: "CBC",
+    });
     const missing = await json("/api/tests/missing");
     expect(missing.response.status).toBe(404);
-    expect(missing.body).toEqual({ code: "LAB_TEST_NOT_FOUND", message: "Lab test not found" });
+    expect(apiErrorSchema.parse(missing.body)).toEqual({
+      code: "LAB_TEST_NOT_FOUND",
+      message: "Lab test not found",
+    });
   });
 });
 
@@ -128,9 +151,10 @@ describe("lab test writes", () => {
         turnaroundHours: 24,
       }),
     });
+    const createdBody = labTestResponseSchema.parse(created.body);
     expect(created.response.status).toBe(201);
-    expect(created.response.headers.get("location")).toBe(`/api/tests/${created.body.id}`);
-    expect(created.body).toMatchObject({
+    expect(created.response.headers.get("location")).toBe(`/api/tests/${createdBody.id}`);
+    expect(createdBody).toMatchObject({
       code: "LIPID",
       name: "Lipid Panel",
       priceCents: 3800,
@@ -151,7 +175,7 @@ describe("lab test writes", () => {
       }),
     });
     expect(created.response.status).toBe(409);
-    expect(created.body).toMatchObject({
+    expect(apiErrorSchema.parse(created.body)).toMatchObject({
       code: "DUPLICATE_CODE",
       message: "A lab test with this code already exists",
     });
@@ -171,7 +195,7 @@ describe("lab test writes", () => {
       body: JSON.stringify({ name: " CBC Panel ", active: false }),
     });
     expect(updated.response.status).toBe(200);
-    expect(updated.body).toMatchObject({
+    expect(labTestResponseSchema.parse(updated.body)).toMatchObject({
       id: "t-cbc",
       code: "CBC",
       name: "CBC Panel",
@@ -192,7 +216,7 @@ describe("lab test writes", () => {
       }),
     });
     expect(invalid.response.status).toBe(422);
-    expect(invalid.body).toMatchObject({
+    expect(apiErrorSchema.parse(invalid.body)).toMatchObject({
       code: "VALIDATION_ERROR",
       message: "Request validation failed",
     });
@@ -205,6 +229,6 @@ describe("lab test writes", () => {
       body: JSON.stringify({ name: "Nope" }),
     });
     expect(missing.response.status).toBe(404);
-    expect(missing.body).toMatchObject({ code: "LAB_TEST_NOT_FOUND" });
+    expect(apiErrorSchema.parse(missing.body)).toMatchObject({ code: "LAB_TEST_NOT_FOUND" });
   });
 });

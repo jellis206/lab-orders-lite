@@ -165,10 +165,10 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 export function createAppRouter(history?: RouterHistory) {
-  return createRouter({
-    routeTree,
-    ...(history === undefined ? {} : { history }),
-  });
+  if (history === undefined) {
+    return createRouter({ routeTree });
+  }
+  return createRouter({ routeTree, history });
 }
 
 export function createTestRouter(path = "/") {

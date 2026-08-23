@@ -1,3 +1,4 @@
+import { healthResponseSchema } from "@lab-orders/contracts";
 import { Disclosure, DisclosureButton, DisclosurePanel } from "@headlessui/react";
 import {
   BeakerIcon,
@@ -46,7 +47,7 @@ function ApiStatus() {
     queryFn: async () => {
       const response = await fetch("/api/health");
       if (!response.ok) throw new Error("API unavailable");
-      return response.json() as Promise<{ status: "ok" }>;
+      return healthResponseSchema.parse(await response.json());
     },
     refetchInterval: 60_000,
   });

@@ -13,7 +13,7 @@
     "build": "bun run --filter './apps/*' build",
     "test": "bun test apps/api apps/web/src packages",
     "typecheck": "bun run --filter '*' typecheck",
-    "lint": "oxlint apps packages && bun run lint:no-use-effect",
+    "lint": "oxlint . && bun run lint:no-use-effect",
     "lint:no-use-effect": "! grep -R -n -E '\\buseEffect\\b' apps/web/src --include='*.ts' --include='*.tsx'",
     "format": "oxfmt --write .",
     "format:check": "oxfmt --check .",
@@ -27,9 +27,10 @@
     "db:studio": "bun run --cwd apps/api db:studio"
   },
   "devDependencies": {
+    "@oxlint/plugins": "1.79.0",
     "@playwright/test": "^1.62.1",
     "concurrently": "^10.0.5",
     "oxfmt": "^0.64.0",
-    "oxlint": "^1.79.0"
+    "oxlint": "1.79.0"
   }
 }

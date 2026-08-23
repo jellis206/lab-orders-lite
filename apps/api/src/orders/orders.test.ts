@@ -1,3 +1,8 @@
+import {
+  apiErrorSchema,
+  orderDetailResponseSchema,
+  orderListResponseSchema,
+} from "@lab-orders/contracts";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 import { createApp } from "../app";
@@ -73,10 +78,17 @@ afterEach(async () => database.cleanup());
 
 async function json(path: string, init?: RequestInit) {
   const response = await app.request(path, init);
-  return { response, body: (await response.json()) as Record<string, unknown> };
+  return { response, body: await response.json() };
 }
 
-function createBody(overrides: Record<string, unknown> = {}) {
+type CreateOrderFixture = {
+  patientId?: string;
+  testIds?: string[];
+  totalCents?: number;
+  estimatedReadyAt?: string;
+};
+
+function createBody(overrides: CreateOrderFixture = {}) {
   return {
     method: "POST",
     headers: { "content-type": "application/json" },
@@ -88,6 +100,13 @@ function createBody(overrides: Record<string, unknown> = {}) {
   };
 }
 
+function requireCursor(nextCursor: string | null) {
+  if (nextCursor === null) {
+    throw new Error("expected a pagination cursor");
+  }
+  return nextCursor;
+}
+
 describe("order creation", () => {
   test("creates an order from catalog data and ignores client-derived fields", async () => {
     const created = await json(
@@ -97,9 +116,10 @@ describe("order creation", () => {
     expect(created.response.status).toBe(422);
 
     const valid = await json("/api/orders", createBody());
+    const validBody = orderDetailResponseSchema.parse(valid.body);
     expect(valid.response.status).toBe(201);
-    expect(valid.response.headers.get("location")).toBe(`/api/orders/${valid.body.id}`);
-    expect(valid.body).toMatchObject({
+    expect(valid.response.headers.get("location")).toBe(`/api/orders/${validBody.id}`);
+    expect(validBody).toMatchObject({
       patientId: "patient-ada",
       patientFirstName: "Ada",
       status: "pending",
@@ -110,10 +130,8 @@ describe("order creation", () => {
         { labTestId: "test-cmp", testCode: "CMP", priceCents: 4500, turnaroundHours: 24 },
       ],
     });
-    expect(valid.body.estimatedReadyAt).toBe(
-      new Date(
-        new Date(valid.body.orderedAt as string).getTime() + 24 * 60 * 60 * 1000,
-      ).toISOString(),
+    expect(validBody.estimatedReadyAt).toBe(
+      new Date(new Date(validBody.orderedAt).getTime() + 24 * 60 * 60 * 1000).toISOString(),
     );
   });
 
@@ -121,10 +139,14 @@ describe("order creation", () => {
     expect((await json("/api/orders", createBody({ patientId: "missing" }))).response.status).toBe(
       404,
     );
-    expect((await json("/api/orders", createBody({ testIds: ["missing"] }))).body).toMatchObject({
+    expect(
+      apiErrorSchema.parse((await json("/api/orders", createBody({ testIds: ["missing"] }))).body),
+    ).toMatchObject({
       code: "LAB_TEST_NOT_FOUND",
     });
-    expect((await json("/api/orders", createBody({ testIds: ["test-tsh"] }))).body).toMatchObject({
+    expect(
+      apiErrorSchema.parse((await json("/api/orders", createBody({ testIds: ["test-tsh"] }))).body),
+    ).toMatchObject({
       code: "INACTIVE_TEST",
     });
     expect((await json("/api/orders", createBody({ testIds: [] }))).response.status).toBe(422);
@@ -247,29 +269,27 @@ describe("order reads", () => {
   test("lists newest first with opaque cursor pagination", async () => {
     await seedOrders();
     const first = await json("/api/orders?limit=2");
-    expect((first.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
-      "order-new",
-      "order-mid",
-    ]);
-    expect(first.body.hasMore).toBe(true);
+    const firstBody = orderListResponseSchema.parse(first.body);
+    expect(firstBody.items.map((item) => item.id)).toEqual(["order-new", "order-mid"]);
+    expect(firstBody.hasMore).toBe(true);
 
     const second = await json(
-      `/api/orders?limit=2&after=${encodeURIComponent(first.body.nextCursor as string)}`,
+      `/api/orders?limit=2&after=${encodeURIComponent(requireCursor(firstBody.nextCursor))}`,
     );
-    expect((second.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
-      "order-old",
-    ]);
-    expect(second.body).toMatchObject({ hasMore: false, nextCursor: null });
+    const secondBody = orderListResponseSchema.parse(second.body);
+    expect(secondBody.items.map((item) => item.id)).toEqual(["order-old"]);
+    expect(secondBody).toMatchObject({ hasMore: false, nextCursor: null });
   });
 
   test("applies patient search and status filters before pagination", async () => {
     await seedOrders();
     const byPatient = await json("/api/orders?search=ada&limit=1");
-    expect((byPatient.body.items as Array<{ id: string }>)[0]?.id).toBe("order-new");
-    expect(byPatient.body.hasMore).toBe(true);
+    const byPatientBody = orderListResponseSchema.parse(byPatient.body);
+    expect(byPatientBody.items[0]?.id).toBe("order-new");
+    expect(byPatientBody.hasMore).toBe(true);
 
     const byStatus = await json("/api/orders?status=completed");
-    expect((byStatus.body.items as Array<{ id: string }>).map((item) => item.id)).toEqual([
+    expect(orderListResponseSchema.parse(byStatus.body).items.map((item) => item.id)).toEqual([
       "order-old",
     ]);
   });
@@ -278,16 +298,17 @@ describe("order reads", () => {
     await seedOrders();
     expect((await json("/api/orders?after=bad")).response.status).toBe(400);
     const first = await json("/api/orders?search=ada&limit=1");
+    const firstBody = orderListResponseSchema.parse(first.body);
     const mismatch = await json(
-      `/api/orders?search=ben&after=${encodeURIComponent(first.body.nextCursor as string)}`,
+      `/api/orders?search=ben&after=${encodeURIComponent(requireCursor(firstBody.nextCursor))}`,
     );
-    expect(mismatch.body).toMatchObject({ code: "INVALID_CURSOR" });
+    expect(apiErrorSchema.parse(mismatch.body)).toMatchObject({ code: "INVALID_CURSOR" });
   });
 
   test("returns a historical detail and 404 for unknown ids", async () => {
     await seedOrders();
     const detail = await json("/api/orders/order-mid");
-    expect(detail.body).toMatchObject({
+    expect(orderDetailResponseSchema.parse(detail.body)).toMatchObject({
       id: "order-mid",
       testCount: 2,
       totalCents: 7500,
@@ -298,13 +319,14 @@ describe("order reads", () => {
 
   test("keeps snapshots after later catalog edits", async () => {
     const created = await json("/api/orders", createBody({ testIds: ["test-cbc"] }));
+    const createdBody = orderDetailResponseSchema.parse(created.body);
     await json(`/api/tests/test-cbc`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ name: "New CBC", priceCents: 9999, turnaroundHours: 99 }),
     });
-    const detail = await json(`/api/orders/${created.body.id}`);
-    expect(detail.body).toMatchObject({
+    const detail = await json(`/api/orders/${createdBody.id}`);
+    expect(orderDetailResponseSchema.parse(detail.body)).toMatchObject({
       totalCents: 3000,
       tests: [
         {
@@ -322,29 +344,30 @@ describe("order reads", () => {
 describe("order status", () => {
   test("allows only forward transitions and rejects terminal changes", async () => {
     const created = await json("/api/orders", createBody({ testIds: ["test-cbc"] }));
-    const started = await json(`/api/orders/${created.body.id}`, {
+    const createdBody = orderDetailResponseSchema.parse(created.body);
+    const started = await json(`/api/orders/${createdBody.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status: "in_progress" }),
     });
-    expect(started.body).toMatchObject({ status: "in_progress" });
+    expect(orderDetailResponseSchema.parse(started.body)).toMatchObject({ status: "in_progress" });
 
-    const skipped = await json(`/api/orders/${created.body.id}`, {
+    const skipped = await json(`/api/orders/${createdBody.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status: "pending" }),
     });
     expect(skipped.response.status).toBe(409);
-    expect(skipped.body).toMatchObject({ code: "INVALID_STATUS_TRANSITION" });
+    expect(apiErrorSchema.parse(skipped.body)).toMatchObject({ code: "INVALID_STATUS_TRANSITION" });
 
-    const completed = await json(`/api/orders/${created.body.id}`, {
+    const completed = await json(`/api/orders/${createdBody.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status: "completed" }),
     });
-    expect(completed.body).toMatchObject({ status: "completed" });
+    expect(orderDetailResponseSchema.parse(completed.body)).toMatchObject({ status: "completed" });
 
-    const afterComplete = await json(`/api/orders/${created.body.id}`, {
+    const afterComplete = await json(`/api/orders/${createdBody.id}`, {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ status: "cancelled" }),

@@ -32,9 +32,10 @@ const phoneSchema = z
     message: "Enter a valid phone number",
   });
 
-function optionalContact<T extends z.ZodType<string>>(schema: T) {
+function optionalContact(schema: z.ZodType<string>) {
   return z.preprocess((value) => {
-    if (typeof value === "string" && value.trim() === "") return undefined;
+    const parsed = z.string().safeParse(value);
+    if (parsed.success && parsed.data.trim() === "") return undefined;
     return value;
   }, schema.optional());
 }

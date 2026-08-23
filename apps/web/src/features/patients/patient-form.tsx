@@ -128,12 +128,13 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
         <button
           type="button"
           className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
-          onClick={() =>
-            void navigate({
-              to: patient ? "/patients/$patientId" : "/patients",
-              ...(patient ? { params: { patientId: patient.id } } : {}),
-            })
-          }
+          onClick={() => {
+            if (patient) {
+              void navigate({ to: "/patients/$patientId", params: { patientId: patient.id } });
+              return;
+            }
+            void navigate({ to: "/patients" });
+          }}
         >
           Cancel
         </button>

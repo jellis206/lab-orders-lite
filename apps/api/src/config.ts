@@ -26,11 +26,14 @@ export type AppConfig = {
 
 export function parseConfig(environment: Record<string, string | undefined>): AppConfig {
   const parsed = environmentSchema.parse(environment);
-  return {
+  const config: AppConfig = {
     databaseUrl: parsed.TURSO_DATABASE_URL,
-    ...(parsed.TURSO_AUTH_TOKEN === undefined ? {} : { authToken: parsed.TURSO_AUTH_TOKEN }),
     port: parsed.PORT,
   };
+  if (parsed.TURSO_AUTH_TOKEN !== undefined) {
+    config.authToken = parsed.TURSO_AUTH_TOKEN;
+  }
+  return config;
 }
 
 export function getConfig(): AppConfig {

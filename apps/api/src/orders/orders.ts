@@ -2,7 +2,6 @@ import {
   createOrderSchema,
   orderListQuerySchema,
   patchOrderStatusSchema,
-  type ApiError,
   type OrderDetailResponse,
   type OrderListResponse,
   type OrderSummaryResponse,
@@ -12,6 +11,7 @@ import { Hono } from "hono";
 import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { orderTests, orders, patients } from "../db/schema";
+import { apiError, readRequestJson, toApiErrorIssues } from "../http";
 import { assertStatusTransition, createOrderRecord, OrderServiceError } from "./order.service";
 
 const cursorSchema = z.object({
@@ -37,20 +37,8 @@ function decodeCursor(value: string): Cursor | undefined {
   }
 }
 
-function error(code: string, message: string, details?: unknown): ApiError {
-  return { code, message, ...(details === undefined ? {} : { details }) };
-}
-
 function serviceError(cause: OrderServiceError) {
-  return error(cause.code, cause.message);
-}
-
-async function requestJson(context: { req: { json: () => Promise<unknown> } }) {
-  try {
-    return { data: await context.req.json() } as const;
-  } catch {
-    return { error: error("INVALID_JSON", "Request body must be valid JSON") } as const;
-  }
+  return apiError(cause.code, cause.message);
 }
 
 function toSummary(row: {
@@ -88,7 +76,11 @@ export function createOrderRoutes(db: AppDatabase) {
     const parsed = orderListQuerySchema.safeParse(context.req.query());
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Query validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Query validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         400,
       );
     }
@@ -97,7 +89,7 @@ export function createOrderRoutes(db: AppDatabase) {
     const status = parsed.data.status ?? "";
     const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
     if (parsed.data.after && (!cursor || cursor.search !== search || cursor.status !== status)) {
-      return context.json(error("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
+      return context.json(apiError("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
     }
 
     const searchCondition = search
@@ -175,7 +167,7 @@ export function createOrderRoutes(db: AppDatabase) {
       .innerJoin(patients, eq(orders.patientId, patients.id))
       .where(eq(orders.id, context.req.param("id")))
       .get();
-    if (!row) return context.json(error("ORDER_NOT_FOUND", "Order not found"), 404);
+    if (!row) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
 
     const tests = await db
       .select({
@@ -197,12 +189,16 @@ export function createOrderRoutes(db: AppDatabase) {
   });
 
   app.post("/", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = createOrderSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }
@@ -234,12 +230,16 @@ export function createOrderRoutes(db: AppDatabase) {
   });
 
   app.patch("/:id", async (context) => {
-    const body = await requestJson(context);
+    const body = await readRequestJson(context);
     if ("error" in body) return context.json(body.error, 400);
     const parsed = patchOrderStatusSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }
@@ -247,7 +247,7 @@ export function createOrderRoutes(db: AppDatabase) {
     const existing = await db.query.orders.findFirst({
       where: eq(orders.id, context.req.param("id")),
     });
-    if (!existing) return context.json(error("ORDER_NOT_FOUND", "Order not found"), 404);
+    if (!existing) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
 
     try {
       assertStatusTransition(existing.status, parsed.data.status);
