@@ -1,6 +1,6 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
-import type { FormEvent } from "react";
+import { useEffect, useRef, type FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
 import { Listbox, ListboxOption } from "../../components/listbox";
@@ -24,6 +24,26 @@ export function OrderListPage() {
   const navigate = useNavigate({ from: "/orders" });
   const query = useInfiniteQuery(orderListOptions(search ?? "", status));
   const items = query.data?.pages.flatMap((page) => page.items) ?? [];
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !query.hasNextPage) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting && !query.isFetchingNextPage) {
+          void query.fetchNextPage();
+        }
+      },
+      { threshold: 0.5 }
+    );
+
+    observer.observe(sentinel);
+    return () => {
+      observer.disconnect();
+    };
+  }, [query.hasNextPage, query.isFetchingNextPage, query.fetchNextPage]);
 
   function submitSearch(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -135,7 +155,7 @@ export function OrderListPage() {
           </p>
         </div>
       ) : (
-        <>
+        <div>
           <div className="mt-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-app-border bg-app-hover text-xs uppercase tracking-wide text-zinc-500">
@@ -173,16 +193,18 @@ export function OrderListPage() {
             </table>
           </div>
           {query.hasNextPage && (
-            <div className="mt-5 text-center">
-              <Button
-                disabled={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {query.isFetchingNextPage ? "Loading…" : "Load more"}
-              </Button>
+            <div
+              ref={sentinelRef}
+              className="mt-5 flex justify-center py-4"
+              role="status"
+              aria-live="polite"
+            >
+              {query.isFetchingNextPage && (
+                <span className="text-sm text-app-muted">Loading more orders…</span>
+              )}
             </div>
           )}
-        </>
+        </div>
       )}
     </section>
   );
