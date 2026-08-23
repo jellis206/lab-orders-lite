@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 4 — Lab Test Catalog (pending)
-- **Next:** Phase 5 — Order domain/API
+- **Last Commit:** Phase 5 — Order domain/API (pending)
+- **Next:** Phase 6 — Order creation UI
 
 ## Completed Work
 
@@ -65,6 +65,7 @@
 - **96 tests passing**, `bun run check` passes
 
 **Acceptance → tests:**
+
 - View/create/edit: API CRUD + `lab-tests.test.tsx` create/list
 - Normalized codes + 409: `createLabTestSchema`, API duplicate test, UI conflict test
 - Exact cents: `money.test.ts`
@@ -72,13 +73,28 @@
 - Active visible/editable: list badge + form checkbox + API patch
 - Filters + cursor reset: API compose/mismatch tests + URL filter behavior test
 
-## In Progress
+### Phase 5 — Order Domain and API ✅
 
-### Phase 5 — Order Domain and API
+**Completed:**
+
+- Pure total and elapsed-hour readiness calculations in `packages/domain`
+- Exhaustive status transition rules
+- Order contracts that accept IDs only
+- Transactional create service with snapshots, rollback, and historical isolation
+- REST create/list/detail/status endpoints with cursor pagination and filters
+- **128 tests passing**, `bun run check` passes
+
+**Acceptance → tests:**
+- Unique test required / empty/duplicate: contract + API create tests
+- Unknown patient/test, inactive: API 404/409 tests
+- Derived fields rejected: strict schema + HTTP 422
+- Atomic write: rollback test
+- Snapshots + total + slowest elapsed hours: create + historical tests
+- Cursor list + filters: order read tests
+- Status forward-only: domain + API status tests
 
 ## Remaining Phases
 
-- **Phase 5** — Order domain/API (pure logic, transactional creation, snapshots, status rules)
 - **Phase 6** — Order creation UI (searchable selection, previews, validation)
 - **Phase 7** — Order browsing (filters, details, status updates)
 - **Phase 8** — Quality/polish (E2E Playwright, accessibility, responsive, state handling)

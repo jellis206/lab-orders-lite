@@ -2,6 +2,7 @@ import type { HealthResponse } from "@lab-orders/contracts";
 import { Hono } from "hono";
 import type { AppDatabase } from "./db/client";
 import { createLabTestRoutes } from "./lab-tests/lab-tests";
+import { createOrderRoutes } from "./orders/orders";
 import { createPatientRoutes } from "./patients/patients";
 
 export function createApp(db?: AppDatabase) {
@@ -18,6 +19,7 @@ export function createApp(db?: AppDatabase) {
   if (db) {
     app.route("/api/patients", createPatientRoutes(db));
     app.route("/api/tests", createLabTestRoutes(db));
+    app.route("/api/orders", createOrderRoutes(db));
   }
 
   return app;
