@@ -338,46 +338,49 @@ export function OrderForm() {
         </form.Field>
       </section>
 
-      <section className="rounded-xl border border-app-border bg-app-surface p-6">
-        <h2 className="text-lg font-semibold text-app-text">Preview</h2>
-        {selectedTests.length === 0 ? (
-          <p className="mt-2 text-sm text-app-muted">Select tests to preview cost and readiness.</p>
-        ) : (
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-zinc-500">Total</dt>
-              <dd className="font-semibold text-app-text">{formatCents(previewTotal)}</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Slowest turnaround</dt>
-              <dd className="font-semibold text-app-text">{slowest} hours</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Estimated ready</dt>
-              <dd className="font-semibold text-app-text">
-                {previewReady ? formatDateTime(previewReady) : "—"}
-              </dd>
-            </div>
-          </dl>
-        )}
+      <section className="flex items-end justify-between gap-4 rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-app-text">Preview</h2>
+          {selectedTests.length === 0 ? (
+            <p className="mt-2 text-sm text-app-muted">
+              Select tests to preview cost and readiness.
+            </p>
+          ) : (
+            <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+              <div>
+                <dt className="text-zinc-500">Total</dt>
+                <dd className="font-semibold text-app-text">{formatCents(previewTotal)}</dd>
+              </div>
+              <div>
+                <dt className="text-zinc-500">Slowest turnaround</dt>
+                <dd className="font-semibold text-app-text">{slowest} hours</dd>
+              </div>
+              <div>
+                <dt className="text-zinc-500">Estimated ready</dt>
+                <dd className="font-semibold text-app-text">
+                  {previewReady ? formatDateTime(previewReady) : "—"}
+                </dd>
+              </div>
+            </dl>
+          )}
+        </div>
+        <div className="flex shrink-0 gap-3">
+          <Button
+            type="button"
+            disabled={mutation.isPending}
+            onClick={() => void form.handleSubmit()}
+          >
+            {mutation.isPending ? "Creating order…" : "Create order"}
+          </Button>
+          <button
+            type="button"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
+            onClick={() => void navigate({ to: "/orders" })}
+          >
+            Cancel
+          </button>
+        </div>
       </section>
-
-      <div className="flex gap-3">
-        <Button
-          type="button"
-          disabled={mutation.isPending}
-          onClick={() => void form.handleSubmit()}
-        >
-          {mutation.isPending ? "Creating order…" : "Create order"}
-        </Button>
-        <button
-          type="button"
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
-          onClick={() => void navigate({ to: "/orders" })}
-        >
-          Cancel
-        </button>
-      </div>
     </div>
   );
 }
