@@ -10,6 +10,7 @@ import { useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
 import { ApiRequestError } from "../../api/client";
 import { Button } from "../../components/button";
+import { Input } from "../../components/input";
 import { labTestListOptions } from "../lab-tests/api";
 import { patientListOptions } from "../patients/api";
 import { createOrder, orderKeys } from "./api";
@@ -19,9 +20,6 @@ type FormValues = {
   patientId: string;
   testIds: string[];
 };
-
-const fieldClass =
-  "mt-1 block min-h-10 w-full rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600";
 
 export function OrderForm() {
   const navigate = useNavigate();
@@ -108,7 +106,7 @@ export function OrderForm() {
     <div className="mt-6 space-y-6">
       {mutation.isError && (
         <div
-          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800"
+          className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
           role="alert"
         >
           {mutation.error instanceof ApiRequestError
@@ -117,25 +115,25 @@ export function OrderForm() {
         </div>
       )}
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-zinc-950">Patient</h2>
-        <p className="mt-1 text-sm text-zinc-600">Search and select one patient for this order.</p>
+      <section className="rounded-xl border border-app-border bg-app-surface p-6">
+        <h2 className="text-lg font-semibold text-app-text">Patient</h2>
+        <p className="mt-1 text-sm text-app-muted">Search and select one patient for this order.</p>
         <form.Field name="patientId">
           {(field) => (
             <div className="mt-4">
               {selectedPatient ? (
-                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-app-border bg-app-bg px-4 py-3">
                   <p>
-                    <span className="font-medium text-zinc-950">
+                    <span className="font-medium text-app-text">
                       {selectedPatient.lastName}, {selectedPatient.firstName}
                     </span>
-                    <span className="ml-2 text-sm text-zinc-600">
+                    <span className="ml-2 text-sm text-app-muted">
                       DOB {selectedPatient.dateOfBirth}
                     </span>
                   </p>
                   <button
                     type="button"
-                    className="text-sm font-semibold text-blue-700 hover:underline"
+                    className="text-sm font-semibold text-blue-700 hover:underline dark:text-blue-400"
                     onClick={() => {
                       setSelectedPatient(undefined);
                       field.handleChange("");
@@ -155,36 +153,36 @@ export function OrderForm() {
                     <label className="sr-only" htmlFor="patientSearch">
                       Search patients
                     </label>
-                    <input
+                    <Input
                       id="patientSearch"
                       name="patientSearch"
                       defaultValue={patientQuery}
                       placeholder="Search name, email, or phone"
-                      className={fieldClass}
+                      className="flex-1"
                     />
                     <Button type="submit">Search</Button>
                   </form>
                   {patients.isPending ? (
-                    <p className="mt-3 text-sm text-zinc-600" role="status">
+                    <p className="mt-3 text-sm text-app-muted" role="status">
                       Loading patients…
                     </p>
                   ) : patients.isError ? (
-                    <p className="mt-3 text-sm text-red-700" role="alert">
+                    <p className="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">
                       Patients could not be loaded. {patients.error.message}
                     </p>
                   ) : (
-                    <ul className="mt-3 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+                    <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
                       {patientResults.map((patient) => (
                         <li key={patient.id}>
                           <button
                             type="button"
-                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-zinc-50"
+                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-app-hover"
                             onClick={() => selectPatient(patient)}
                           >
-                            <span className="font-medium text-zinc-950">
+                            <span className="font-medium text-app-text">
                               {patient.lastName}, {patient.firstName}
                             </span>
-                            <span className="text-sm text-zinc-600">{patient.dateOfBirth}</span>
+                            <span className="text-sm text-app-muted">{patient.dateOfBirth}</span>
                           </button>
                         </li>
                       ))}
@@ -203,7 +201,7 @@ export function OrderForm() {
                 </>
               )}
               {field.state.meta.errors.length > 0 && (
-                <p id="patientId-error" className="mt-2 text-sm text-red-700">
+                <p id="patientId-error" className="mt-2 text-sm text-red-700 dark:text-red-300">
                   {String(field.state.meta.errors[0])}
                 </p>
               )}
@@ -212,9 +210,9 @@ export function OrderForm() {
         </form.Field>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-zinc-950">Lab tests</h2>
-        <p className="mt-1 text-sm text-zinc-600">
+      <section className="rounded-xl border border-app-border bg-app-surface p-6">
+        <h2 className="text-lg font-semibold text-app-text">Lab tests</h2>
+        <p className="mt-1 text-sm text-app-muted">
           Search active catalog tests. Selected tests stay visible if the search changes.
         </p>
         <form.Field name="testIds">
@@ -229,41 +227,41 @@ export function OrderForm() {
                 <label className="sr-only" htmlFor="testSearch">
                   Search lab tests
                 </label>
-                <input
+                <Input
                   id="testSearch"
                   name="testSearch"
                   defaultValue={testQuery}
                   placeholder="Search code or name"
-                  className={fieldClass}
+                  className="flex-1"
                 />
                 <Button type="submit">Search</Button>
               </form>
               {tests.isPending ? (
-                <p className="mt-3 text-sm text-zinc-600" role="status">
+                <p className="mt-3 text-sm text-app-muted" role="status">
                   Loading lab tests…
                 </p>
               ) : tests.isError ? (
-                <p className="mt-3 text-sm text-red-700" role="alert">
+                <p className="mt-3 text-sm text-red-700 dark:text-red-300" role="alert">
                   Lab tests could not be loaded. {tests.error.message}
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+                <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
                   {testResults.map((test) => {
                     const checked = selectedTests.some((item) => item.id === test.id);
                     return (
                       <li key={test.id}>
-                        <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-zinc-50">
+                        <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-app-hover">
                           <input
                             type="checkbox"
                             checked={checked}
                             onChange={() => toggleTest(test)}
-                            className="mt-1 size-4 rounded border-zinc-300 text-blue-600 focus:ring-blue-600"
+                            className="mt-1 size-4 rounded border-app-border text-blue-600 focus:ring-blue-600"
                           />
                           <span>
-                            <span className="block font-medium text-zinc-950">
+                            <span className="block font-medium text-app-text">
                               {test.code} · {test.name}
                             </span>
-                            <span className="text-sm text-zinc-600">
+                            <span className="text-sm text-app-muted">
                               {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
                             </span>
                           </span>
@@ -285,8 +283,8 @@ export function OrderForm() {
               )}
               {selectedTests.length > 0 && (
                 <div className="mt-5">
-                  <h3 className="text-sm font-semibold text-zinc-900">Selected tests</h3>
-                  <ul className="mt-2 divide-y divide-zinc-200 rounded-lg border border-zinc-200">
+                  <h3 className="text-sm font-semibold text-app-text">Selected tests</h3>
+                  <ul className="mt-2 divide-y divide-app-border rounded-lg border border-app-border">
                     {selectedTests.map((test) => (
                       <li
                         key={test.id}
@@ -295,7 +293,7 @@ export function OrderForm() {
                         <span>
                           {test.code} · {test.name}
                         </span>
-                        <span className="text-zinc-600">
+                        <span className="text-app-muted">
                           {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
                         </span>
                       </li>
@@ -304,7 +302,7 @@ export function OrderForm() {
                 </div>
               )}
               {field.state.meta.errors.length > 0 && (
-                <p id="testIds-error" className="mt-2 text-sm text-red-700">
+                <p id="testIds-error" className="mt-2 text-sm text-red-700 dark:text-red-300">
                   {String(field.state.meta.errors[0])}
                 </p>
               )}
@@ -313,23 +311,23 @@ export function OrderForm() {
         </form.Field>
       </section>
 
-      <section className="rounded-xl border border-zinc-200 bg-white p-6">
-        <h2 className="text-lg font-semibold text-zinc-950">Preview</h2>
+      <section className="rounded-xl border border-app-border bg-app-surface p-6">
+        <h2 className="text-lg font-semibold text-app-text">Preview</h2>
         {selectedTests.length === 0 ? (
-          <p className="mt-2 text-sm text-zinc-600">Select tests to preview cost and readiness.</p>
+          <p className="mt-2 text-sm text-app-muted">Select tests to preview cost and readiness.</p>
         ) : (
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-zinc-500">Total</dt>
-              <dd className="font-semibold text-zinc-950">{formatMoney(previewTotal)}</dd>
+              <dd className="font-semibold text-app-text">{formatMoney(previewTotal)}</dd>
             </div>
             <div>
               <dt className="text-zinc-500">Slowest turnaround</dt>
-              <dd className="font-semibold text-zinc-950">{slowest} hours</dd>
+              <dd className="font-semibold text-app-text">{slowest} hours</dd>
             </div>
             <div>
               <dt className="text-zinc-500">Estimated ready</dt>
-              <dd className="font-semibold text-zinc-950">
+              <dd className="font-semibold text-app-text">
                 {previewReady ? formatDateTime(previewReady) : "—"}
               </dd>
             </div>
@@ -347,7 +345,7 @@ export function OrderForm() {
         </Button>
         <button
           type="button"
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-100"
+          className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
           onClick={() => void navigate({ to: "/orders" })}
         >
           Cancel

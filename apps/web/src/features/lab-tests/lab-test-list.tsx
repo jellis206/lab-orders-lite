@@ -3,6 +3,8 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
+import { Input } from "../../components/input";
+import { Listbox, ListboxOption } from "../../components/listbox";
 import { labTestListOptions } from "./api";
 
 function parseActive(value?: "true" | "false") {
@@ -30,11 +32,13 @@ export function LabTestListPage() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-app-border pb-5">
         <div>
-          <p className="mb-1 text-sm font-medium text-blue-700">Lab Orders Lite</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Lab Tests</h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <p className="mb-1 text-sm font-medium text-blue-700 dark:text-blue-400">
+            Lab Orders Lite
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-app-text">Lab Tests</h1>
+          <p className="mt-2 text-sm text-app-muted">
             Maintain test codes, pricing, and elapsed-hour turnaround times.
           </p>
         </div>
@@ -51,24 +55,25 @@ export function LabTestListPage() {
           <label className="sr-only" htmlFor="lab-test-search">
             Search lab tests
           </label>
-          <input
+          <Input
             id="lab-test-search"
             name="search"
             defaultValue={search ?? ""}
             placeholder="Search code or name"
-            className="min-h-10 min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            className="min-w-0 flex-1"
           />
           <Button type="submit">Search</Button>
         </form>
-        <div>
-          <label className="text-sm font-medium text-zinc-800" htmlFor="lab-test-active">
+        <div className="w-full sm:w-44">
+          <label className="text-sm font-medium text-app-text" htmlFor="lab-test-active">
             Status
           </label>
-          <select
+          <Listbox
             id="lab-test-active"
-            value={active ?? ""}
-            onChange={(event) => {
-              const next = event.target.value;
+            name="active"
+            aria-label="Status"
+            value={active ?? "all"}
+            onChange={(next: string) => {
               void navigate({
                 search: (previous) => ({
                   ...previous,
@@ -76,22 +81,22 @@ export function LabTestListPage() {
                 }),
               });
             }}
-            className="mt-1 block min-h-10 rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+            className="mt-1"
           >
-            <option value="">All tests</option>
-            <option value="true">Active</option>
-            <option value="false">Inactive</option>
-          </select>
+            <ListboxOption value="all">All tests</ListboxOption>
+            <ListboxOption value="true">Active</ListboxOption>
+            <ListboxOption value="false">Inactive</ListboxOption>
+          </Listbox>
         </div>
       </div>
 
       {query.isPending ? (
-        <p className="mt-8 text-sm text-zinc-600" role="status">
+        <p className="mt-8 text-sm text-app-muted" role="status">
           Loading lab tests…
         </p>
       ) : query.isError ? (
         <div
-          className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
           role="alert"
         >
           <p>Lab tests could not be loaded. {query.error.message}</p>
@@ -100,17 +105,17 @@ export function LabTestListPage() {
           </button>
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-zinc-300 bg-white p-10 text-center">
-          <h2 className="font-semibold text-zinc-900">No lab tests found</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+        <div className="mt-8 rounded-xl border border-dashed border-app-border bg-app-surface p-10 text-center">
+          <h2 className="font-semibold text-app-text">No lab tests found</h2>
+          <p className="mt-1 text-sm text-app-muted">
             {search || active ? "Try a different filter." : "Create the first catalog test."}
           </p>
         </div>
       ) : (
         <>
-          <div className="mt-6 overflow-x-auto rounded-xl border border-zinc-200 bg-white">
+          <div className="mt-6 overflow-x-auto rounded-xl border border-app-border bg-app-surface">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-zinc-200 bg-zinc-50 text-xs uppercase tracking-wide text-zinc-500">
+              <thead className="border-b border-app-border bg-app-hover text-xs uppercase tracking-wide text-app-subtle">
                 <tr>
                   <th className="px-5 py-3 font-medium">Code</th>
                   <th className="px-5 py-3 font-medium">Name</th>
@@ -119,27 +124,27 @@ export function LabTestListPage() {
                   <th className="px-5 py-3 font-medium">Status</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-zinc-200">
+              <tbody className="divide-y divide-app-border">
                 {items.map((test) => (
-                  <tr key={test.id} className="hover:bg-zinc-50">
-                    <td className="px-5 py-4 font-medium text-zinc-950">
+                  <tr key={test.id} className="relative hover:bg-app-hover">
+                    <td className="px-5 py-4 font-medium text-app-text">
                       <Link
                         to="/tests/$testId"
                         params={{ testId: test.id }}
-                        className="rounded-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+                        className="after:absolute after:inset-0 after:z-10 focus:outline-none focus-visible:after:ring-2 focus-visible:after:ring-inset focus-visible:after:ring-blue-600"
                       >
                         {test.code}
                       </Link>
                     </td>
-                    <td className="px-5 py-4 text-zinc-700">{test.name}</td>
-                    <td className="px-5 py-4 text-zinc-700">{formatCents(test.priceCents)}</td>
-                    <td className="px-5 py-4 text-zinc-700">{test.turnaroundHours} hours</td>
+                    <td className="px-5 py-4 text-app-muted">{test.name}</td>
+                    <td className="px-5 py-4 text-app-muted">{formatCents(test.priceCents)}</td>
+                    <td className="px-5 py-4 text-app-muted">{test.turnaroundHours} hours</td>
                     <td className="px-5 py-4">
                       <span
                         className={
                           test.active
-                            ? "inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800"
-                            : "inline-flex rounded-full bg-zinc-100 px-2 py-1 text-xs font-medium text-zinc-700"
+                            ? "inline-flex rounded-full bg-emerald-50 px-2 py-1 text-xs font-medium text-emerald-800 dark:bg-emerald-950 dark:text-emerald-200"
+                            : "inline-flex rounded-full bg-app-hover px-2 py-1 text-xs font-medium text-app-muted"
                         }
                       >
                         {test.active ? "Active" : "Inactive"}

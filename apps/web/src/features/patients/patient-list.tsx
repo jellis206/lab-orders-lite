@@ -2,6 +2,7 @@ import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
+import { Input } from "../../components/input";
 import { patientListOptions } from "./api";
 
 export function PatientListPage() {
@@ -18,11 +19,13 @@ export function PatientListPage() {
 
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-200 pb-5">
+      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-app-border pb-5">
         <div>
-          <p className="mb-1 text-sm font-medium text-blue-700">Lab Orders Lite</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Patients</h1>
-          <p className="mt-2 text-sm text-zinc-600">
+          <p className="mb-1 text-sm font-medium text-blue-700 dark:text-blue-400">
+            Lab Orders Lite
+          </p>
+          <h1 className="text-3xl font-semibold tracking-tight text-app-text">Patients</h1>
+          <p className="mt-2 text-sm text-app-muted">
             Find patient records and keep contact information current.
           </p>
         </div>
@@ -38,23 +41,23 @@ export function PatientListPage() {
         <label className="sr-only" htmlFor="patient-search">
           Search patients
         </label>
-        <input
+        <Input
           id="patient-search"
           name="search"
           defaultValue={search ?? ""}
           placeholder="Search name, email, or phone"
-          className="min-h-10 min-w-0 flex-1 rounded-lg border border-zinc-300 bg-white px-3 text-sm focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600"
+          className="min-w-0 flex-1"
         />
         <Button type="submit">Search</Button>
       </form>
 
       {query.isPending ? (
-        <p className="mt-8 text-sm text-zinc-600" role="status">
+        <p className="mt-8 text-sm text-app-muted" role="status">
           Loading patients…
         </p>
       ) : query.isError ? (
         <div
-          className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800"
+          className="mt-8 rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200"
           role="alert"
         >
           <p>Patients could not be loaded. {query.error.message}</p>
@@ -63,28 +66,28 @@ export function PatientListPage() {
           </button>
         </div>
       ) : items.length === 0 ? (
-        <div className="mt-8 rounded-xl border border-dashed border-zinc-300 bg-white p-10 text-center">
-          <h2 className="font-semibold text-zinc-900">No patients found</h2>
-          <p className="mt-1 text-sm text-zinc-600">
+        <div className="mt-8 rounded-xl border border-dashed border-app-border bg-app-surface p-10 text-center">
+          <h2 className="font-semibold text-app-text">No patients found</h2>
+          <p className="mt-1 text-sm text-app-muted">
             {search ? "Try a different search." : "Create the first patient record."}
           </p>
         </div>
       ) : (
         <>
-          <div className="mt-6 overflow-hidden rounded-xl border border-zinc-200 bg-white">
-            <ul className="divide-y divide-zinc-200">
+          <div className="mt-6 overflow-hidden rounded-xl border border-app-border bg-app-surface">
+            <ul className="divide-y divide-app-border">
               {items.map((patient) => (
                 <li key={patient.id}>
                   <Link
                     to="/patients/$patientId"
                     params={{ patientId: patient.id }}
-                    className="grid gap-1 px-5 py-4 hover:bg-zinc-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:grid-cols-3"
+                    className="grid gap-1 px-5 py-4 hover:bg-app-hover focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-600 sm:grid-cols-3"
                   >
-                    <span className="font-medium text-zinc-950">
+                    <span className="font-medium text-app-text">
                       {patient.lastName}, {patient.firstName}
                     </span>
-                    <span className="text-sm text-zinc-600">DOB {patient.dateOfBirth}</span>
-                    <span className="truncate text-sm text-zinc-600">
+                    <span className="text-sm text-app-muted">DOB {patient.dateOfBirth}</span>
+                    <span className="truncate text-sm text-app-muted">
                       {patient.email ?? patient.phone ?? "No contact information"}
                     </span>
                   </Link>

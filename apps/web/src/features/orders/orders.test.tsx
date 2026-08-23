@@ -233,7 +233,8 @@ test("lists orders and puts patient and status filters in the URL", async () => 
   });
   fireEvent.submit(screen.getByRole("search"));
   await waitFor(() => expect(router.state.location.search).toMatchObject({ search: "ada" }));
-  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "pending" } });
+  fireEvent.click(screen.getByLabelText("Status"));
+  fireEvent.click(screen.getByRole("option", { name: "pending" }));
   await waitFor(() =>
     expect(router.state.location.search).toMatchObject({ search: "ada", status: "pending" }),
   );

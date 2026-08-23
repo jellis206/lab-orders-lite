@@ -27,7 +27,7 @@ function OverviewPage() {
     {
       to: "/tests" as const,
       title: "Lab tests",
-      description: "Maintain unique codes, exact prices, and turnaround hours.",
+      description: "Maintain codes, prices, and turnaround hours.",
     },
     {
       to: "/orders" as const,
@@ -37,10 +37,10 @@ function OverviewPage() {
   ];
   return (
     <section>
-      <div className="border-b border-zinc-200 pb-5">
-        <p className="mb-1 text-sm font-medium text-blue-700">Lab Orders Lite</p>
-        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Overview</h1>
-        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+      <div className="border-b border-app-border pb-5">
+        <p className="mb-1 text-sm font-medium text-blue-700 dark:text-blue-400">Lab Orders Lite</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-app-text">Overview</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-app-muted">
           Manage patients, the lab test catalog, and orders from one focused workspace.
         </p>
       </div>
@@ -49,10 +49,10 @@ function OverviewPage() {
           <li key={card.to}>
             <Link
               to={card.to}
-              className="block rounded-xl border border-zinc-200 bg-white p-5 hover:border-blue-200 hover:bg-blue-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+              className="block rounded-xl border border-app-border bg-app-surface p-5 hover:border-blue-200 hover:bg-blue-50/40 dark:hover:border-blue-800 dark:hover:bg-blue-950/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
             >
-              <h2 className="font-semibold text-zinc-950">{card.title}</h2>
-              <p className="mt-2 text-sm text-zinc-600">{card.description}</p>
+              <h2 className="font-semibold text-app-text">{card.title}</h2>
+              <p className="mt-2 text-sm text-app-muted">{card.description}</p>
             </Link>
           </li>
         ))}
@@ -64,15 +64,15 @@ function OverviewPage() {
 const rootRoute = createRootRoute({
   component: AppShell,
   notFoundComponent: () => (
-    <div className="rounded-xl border border-zinc-200 bg-white p-8">
-      <h1 className="text-2xl font-semibold text-zinc-950">Page not found</h1>
-      <p className="mt-2 text-zinc-600">The page you requested does not exist.</p>
+    <div className="rounded-xl border border-app-border bg-app-surface p-8">
+      <h1 className="text-2xl font-semibold text-app-text">Page not found</h1>
+      <p className="mt-2 text-app-muted">The page you requested does not exist.</p>
     </div>
   ),
   errorComponent: ({ error, reset }) => (
-    <div className="rounded-xl border border-red-200 bg-white p-8" role="alert">
-      <h1 className="text-2xl font-semibold text-zinc-950">Something went wrong</h1>
-      <p className="mt-2 text-zinc-600">{error.message}</p>
+    <div className="rounded-xl border border-red-200 bg-app-surface p-8" role="alert">
+      <h1 className="text-2xl font-semibold text-app-text">Something went wrong</h1>
+      <p className="mt-2 text-app-muted">{error.message}</p>
       <Button className="mt-5" onClick={reset}>
         Try again
       </Button>
@@ -165,7 +165,10 @@ const routeTree = rootRoute.addChildren([
 ]);
 
 export function createAppRouter(history?: RouterHistory) {
-  return createRouter({ routeTree, ...(history === undefined ? {} : { history }) });
+  return createRouter({
+    routeTree,
+    ...(history === undefined ? {} : { history }),
+  });
 }
 
 export function createTestRouter(path = "/") {

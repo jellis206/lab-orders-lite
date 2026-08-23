@@ -56,7 +56,8 @@ test("lists lab tests and puts search and active filters in the URL", async () =
   fireEvent.change(screen.getByLabelText("Search lab tests"), { target: { value: "cbc" } });
   fireEvent.submit(screen.getByRole("search"));
   await waitFor(() => expect(router.state.location.search).toMatchObject({ search: "cbc" }));
-  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "true" } });
+  fireEvent.click(screen.getByLabelText("Status"));
+  fireEvent.click(screen.getByRole("option", { name: "Active" }));
   await waitFor(() =>
     expect(router.state.location.search).toMatchObject({ search: "cbc", active: "true" }),
   );
