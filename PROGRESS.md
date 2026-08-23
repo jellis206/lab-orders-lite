@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 5 — Order domain/API (pending)
-- **Next:** Phase 6 — Order creation UI
+- **Last Commit:** Phase 6 — Order creation UI (pending)
+- **Next:** Phase 7 — Order browsing
 
 ## Completed Work
 
@@ -85,6 +85,7 @@
 - **128 tests passing**, `bun run check` passes
 
 **Acceptance → tests:**
+
 - Unique test required / empty/duplicate: contract + API create tests
 - Unknown patient/test, inactive: API 404/409 tests
 - Derived fields rejected: strict schema + HTTP 422
@@ -93,9 +94,20 @@
 - Cursor list + filters: order read tests
 - Status forward-only: domain + API status tests
 
+### Phase 6 — Order Creation UI ✅
+
+**Completed:**
+
+- `/orders/new` with searchable patient picker and active-only test picker
+- Selected tests persist across search/result changes
+- Live preview from shared domain functions
+- Empty-selection validation, pending double-submit guard, API error recovery
+- Success navigates to historical order detail and invalidates order queries
+
+**Acceptance → tests:** `apps/web/src/features/orders/orders.test.tsx`
+
 ## Remaining Phases
 
-- **Phase 6** — Order creation UI (searchable selection, previews, validation)
 - **Phase 7** — Order browsing (filters, details, status updates)
 - **Phase 8** — Quality/polish (E2E Playwright, accessibility, responsive, state handling)
 - **Phase 9** — Documentation (README, setup validation, AI disclosure)

@@ -11,6 +11,8 @@ import { AppShell } from "./app-shell";
 import { Button } from "./components/button";
 import { LabTestListPage } from "./features/lab-tests/lab-test-list";
 import { EditLabTestPage, NewLabTestPage } from "./features/lab-tests/lab-test-pages";
+import { OrderHomePage } from "./features/orders/order-home";
+import { NewOrderPage, OrderDetailPage } from "./features/orders/order-pages";
 import { PatientListPage } from "./features/patients/patient-list";
 import { EditPatientPage, NewPatientPage } from "./features/patients/patient-pages";
 
@@ -112,12 +114,19 @@ const editTestRoute = createRoute({
 const ordersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/orders",
-  component: () => (
-    <Page
-      title="Orders"
-      description="Create and track historically accurate multi-test lab orders."
-    />
-  ),
+  component: OrderHomePage,
+});
+
+const newOrderRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/orders/new",
+  component: NewOrderPage,
+});
+
+const orderDetailRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/orders/$orderId",
+  component: OrderDetailPage,
 });
 
 const routeTree = rootRoute.addChildren([
@@ -129,6 +138,8 @@ const routeTree = rootRoute.addChildren([
   newTestRoute,
   editTestRoute,
   ordersRoute,
+  newOrderRoute,
+  orderDetailRoute,
 ]);
 
 export function createAppRouter(history?: RouterHistory) {
