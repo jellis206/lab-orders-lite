@@ -14,13 +14,13 @@ Default to Bun instead of Node.js tooling.
 
 ## Selected application stack
 
-Follow `project.md`; do not reopen framework selection without a concrete blocker.
+Do not reopen framework selection without a concrete blocker.
 
-- Frontend: React SPA, Vite, TanStack Router, Query, and Form, Zod, Tailwind CSS v4, and selected Catalyst UI components.
+- Frontend: React SPA, Vite, TanStack Router, Query, and Form, Zod, Tailwind CSS v4, and selected Catalyst UI components. Add TanStack Table only if it simplifies real table behavior.
 - API: Hono on Bun with REST/JSON and shared Zod contracts.
 - Persistence: Drizzle and libSQL, using the Turso CLI local development server.
 - Tests: Bun test for unit/integration/component tests and one focused Playwright flow.
-- Do not add TanStack Start, Next.js, GraphQL, Prisma, Redux/Zustand, Express, or architecture/infrastructure listed as non-goals in `project.md`.
+- Stay off TanStack Start, Next.js, GraphQL, Prisma, Redux/Zustand, Express, Nest, Elysia, IoC, generic repositories, queues, and extra hosted infra for local dev.
 
 ## Frontend rules
 
@@ -44,15 +44,18 @@ Do not use `useEffect` to synchronize one piece of React state with another, fet
 - Use Tailwind CSS v4 and only the Catalyst components required by the application.
 - Preserve/adapt Catalyst accessibility semantics; replace Next-specific links/navigation with TanStack Router.
 - Keep the visual system restrained, readable, responsive, and keyboard friendly.
+- Every async screen has loading, error, empty, and success states.
 
 ## Architecture and correctness
 
 - The Hono API is the canonical application boundary; the SPA communicates through `/api`.
 - Keep route handlers thin and business rules independent of Hono, React, and Drizzle.
 - Validate all untrusted API input with shared Zod contracts; do not expose database row types as API DTOs.
-- Store money as integer cents.
-- Create orders transactionally from server-loaded catalog data.
-- Preserve historical order snapshots as specified in `project.md` and `plans/`.
+- Store money as integer cents. The server loads catalog data and derives price, total, and ready time; never trust client-supplied money or turnaround.
+- Create orders in one transaction. Snapshot each selected test’s code, name, price cents, and turnaround hours, and persist the order total and estimated-ready timestamp.
+- Estimated ready time is elapsed hours for the slowest selected test, not business-calendar hours.
+- Order status only moves forward: `pending` → `in_progress` → `completed`, with `cancelled` allowed from `pending` or `in_progress`. `completed` and `cancelled` are terminal.
+- A patient or provider is a domain record, not a user account.
 - Prefer focused feature modules over generic repositories, base services, IoC, or speculative abstractions.
 
 ## Test-driven development

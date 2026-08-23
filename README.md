@@ -82,10 +82,9 @@ lab-orders-lite/
 │   ├── contracts/    # Framework-independent Zod API contracts
 │   └── domain/       # Pure business rules and calculations
 ├── drizzle/          # Committed database migrations and metadata
-├── plans/            # Phase tickets and acceptance criteria
+├── plans/            # Current progress and later enhancements
 ├── scripts/          # Isolated Playwright server helper
-├── orig_instructions.md
-└── project.md
+└── orig_instructions.md
 ```
 
 This keeps HTTP as the canonical application boundary while allowing the two apps to share contracts and pure domain
@@ -129,6 +128,10 @@ The calculation lives in pure domain code and is tested independently.
 
 The API—not the browser—loads current catalog values, validates the patient and selected tests, creates snapshots,
 calculates totals/readiness, and writes the order plus all order items in one transaction.
+
+### Patients are not users
+
+A patient is a clinic record. Do not model `Patient = User` or fold identity into the domain tables. Auth stays out of scope.
 
 ### Status only moves forward
 
@@ -231,26 +234,26 @@ overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
 
 ## Root commands
 
-| Command                | Purpose                                                 |
-| ---------------------- | ------------------------------------------------------- |
-| `bun dev`              | Start local Turso, API watch mode, and Vite             |
-| `bun test`             | Run unit, integration, and component tests              |
-| `bun run e2e`          | Run the isolated Playwright primary-flow test           |
-| `bun run e2e:headed`   | Run Playwright with a visible browser                   |
-| `bun run build`        | Build all applications                                  |
-| `bun run typecheck`    | Strictly type-check all workspaces                      |
-| `bun run lint`         | Lint all workspaces and enforce the no-`useEffect` rule |
-| `bun run format`       | Format repository source                                |
-| `bun run format:check` | Check repository formatting without changing files      |
-| `bun run check`        | Run typecheck, lint, tests, and builds                  |
-| `bun run db:dev`       | Start the persisted local Turso server                  |
-| `bun run db:generate`  | Generate Drizzle migrations                             |
-| `bun run db:migrate`   | Apply committed migrations                              |
-| `bun run db:seed`      | Seed deterministic small dataset (4 patients, 6 tests, 4 orders) |
-| `bun run db:seed-large` | Seed large dataset for scale testing (5k patients, 50k orders) |
+| Command                 | Purpose                                                          |
+| ----------------------- | ---------------------------------------------------------------- |
+| `bun dev`               | Start local Turso, API watch mode, and Vite                      |
+| `bun test`              | Run unit, integration, and component tests                       |
+| `bun run e2e`           | Run the isolated Playwright primary-flow test                    |
+| `bun run e2e:headed`    | Run Playwright with a visible browser                            |
+| `bun run build`         | Build all applications                                           |
+| `bun run typecheck`     | Strictly type-check all workspaces                               |
+| `bun run lint`          | Lint all workspaces and enforce the no-`useEffect` rule          |
+| `bun run format`        | Format repository source                                         |
+| `bun run format:check`  | Check repository formatting without changing files               |
+| `bun run check`         | Run typecheck, lint, tests, and builds                           |
+| `bun run db:dev`        | Start the persisted local Turso server                           |
+| `bun run db:generate`   | Generate Drizzle migrations                                      |
+| `bun run db:migrate`    | Apply committed migrations                                       |
+| `bun run db:seed`       | Seed deterministic small dataset (4 patients, 6 tests, 4 orders) |
+| `bun run db:seed-large` | Seed large dataset for scale testing (5k patients, 50k orders)   |
+| `bun run db:studio`     | Open Drizzle Studio                                              |
 
-Database scripts live in the `tools/db/` directory and are not included in production builds.
-| `bun run db:studio`    | Open Drizzle Studio                                     |
+Database scripts live in `tools/db/` and are not included in production builds.
 
 `bun run e2e` reuses a running `bun dev` stack when one is already up. Otherwise it starts an isolated file database,
 migrates, seeds, then serves the API and Vite app. Stop any conflicting process on ports 3000 or 5173 first if the
@@ -283,21 +286,9 @@ The project deliberately does **not** include:
 OpenAPI is deferred. The Playwright suite is intentionally one primary-flow test rather than a second copy of the unit
 and API suites. The goal is finished, explainable behavior rather than unfinished breadth.
 
-## Delivery plan
+## Delivery
 
-Implementation is split into reviewable phase tickets:
-
-1. [Foundation and developer experience](./plans/01-foundation.md)
-2. [Persistence foundation](./plans/02-persistence.md)
-3. [Patients vertical slice](./plans/03-patients.md)
-4. [Lab-test catalog](./plans/04-lab-tests.md)
-5. [Order domain and API](./plans/05-order-domain-api.md)
-6. [Order creation UI](./plans/06-order-creation-ui.md)
-7. [Order browsing and details](./plans/07-orders-browsing.md)
-8. [Quality and polish](./plans/08-quality-polish.md)
-9. [Documentation and submission review](./plans/09-documentation-review.md)
-
-Each ticket defines its problem, approach, commit-sized steps, acceptance criteria, and verification commands.
+The original nine-phase plan is complete. Current status and later ideas live in [`plans/PROGRESS.md`](./plans/PROGRESS.md).
 
 ## AI usage
 
@@ -306,13 +297,13 @@ authority: every kept change was read, tested, and edited until I could explain 
 
 Where they helped:
 
-- Drafting `project.md` and the phase tickets under `plans/`
+- Drafting the original plan and phase tickets
 - Scaffolding feature modules, Zod contracts, tests, and Catalyst/Headless UI adaptations
 - Proposing review fixes (including CodeRabbit findings)
 
 What I changed or rejected:
 
-- Kept the stack in `project.md` (Bun, Hono, Drizzle, TanStack, Zod) and did not add extra frameworks
+- Kept the chosen stack (Bun, Hono, Drizzle, TanStack, Zod) and did not add extra frameworks
 - Moved business rules into contracts/domain instead of growing Hono handlers
 - Banned `useEffect` in app code; Query/Router/Form own those concerns
 - Dropped suggestions that added generic repositories, extra client state libraries, or business-calendar turnaround
