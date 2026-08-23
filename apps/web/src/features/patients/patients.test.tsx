@@ -107,4 +107,3 @@ test("cancel returns to the patient list from new and edit", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => expect(editRouter.state.location.pathname).toBe("/patients"));
 });
-

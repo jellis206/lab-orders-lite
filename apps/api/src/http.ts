@@ -14,7 +14,11 @@ type JsonRequest = {
   };
 };
 
-export function apiError(code: string, message: string, details?: readonly ApiErrorIssue[]): ApiError {
+export function apiError(
+  code: string,
+  message: string,
+  details?: readonly ApiErrorIssue[],
+): ApiError {
   const error: ApiError = { code, message };
   if (details !== undefined) {
     error.details = [...details];

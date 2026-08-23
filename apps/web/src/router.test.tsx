@@ -6,9 +6,7 @@ import { createQueryClient } from "./query-client";
 import { createTestRouter } from "./router";
 import { installFetchMock } from "./test/fetch";
 
-installFetchMock(() =>
-  Response.json({ status: "ok", service: "lab-orders-api" }),
-);
+installFetchMock(() => Response.json({ status: "ok", service: "lab-orders-api" }));
 
 function renderApp(path = "/") {
   const router = createTestRouter(path);

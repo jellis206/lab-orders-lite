@@ -6,32 +6,192 @@ const NOW = "2025-01-15T14:00:00.000Z";
 
 // Generate realistic patient names
 const firstNames = [
-  "James", "Mary", "Robert", "Patricia", "Michael", "Jennifer", "William", "Linda",
-  "David", "Barbara", "Richard", "Elizabeth", "Joseph", "Susan", "Thomas", "Jessica",
-  "Charles", "Sarah", "Christopher", "Karen", "Daniel", "Nancy", "Matthew", "Lisa",
-  "Mark", "Betty", "Donald", "Margaret", "Steven", "Sandra", "Paul", "Ashley",
-  "Andrew", "Kimberly", "Joshua", "Emily", "Kenneth", "Donna", "Kevin", "Michelle",
-  "Brian", "Dorothy", "George", "Carol", "Edward", "Amanda", "Ronald", "Melissa",
-  "Anthony", "Deborah", "Frank", "Stephanie", "Ryan", "Rebecca", "Gary", "Sharon",
-  "Nicholas", "Laura", "Eric", "Cynthia", "Jonathan", "Kathleen", "Stephen", "Amy",
-  "Larry", "Angela", "Justin", "Shirley", "Scott", "Anna", "Brandon", "Brenda",
-  "Benjamin", "Pamela", "Samuel", "Emma", "Frank", "Nicole", "Gregory", "Helen",
-  "Raymond", "Samantha", "Alexander", "Katherine", "Patrick", "Christine", "Jack", "Debra",
-  "Dennis", "Rachel", "Jerry", "Catherine", "Tyler", "Carolyn", "Aaron", "Janet",
+  "James",
+  "Mary",
+  "Robert",
+  "Patricia",
+  "Michael",
+  "Jennifer",
+  "William",
+  "Linda",
+  "David",
+  "Barbara",
+  "Richard",
+  "Elizabeth",
+  "Joseph",
+  "Susan",
+  "Thomas",
+  "Jessica",
+  "Charles",
+  "Sarah",
+  "Christopher",
+  "Karen",
+  "Daniel",
+  "Nancy",
+  "Matthew",
+  "Lisa",
+  "Mark",
+  "Betty",
+  "Donald",
+  "Margaret",
+  "Steven",
+  "Sandra",
+  "Paul",
+  "Ashley",
+  "Andrew",
+  "Kimberly",
+  "Joshua",
+  "Emily",
+  "Kenneth",
+  "Donna",
+  "Kevin",
+  "Michelle",
+  "Brian",
+  "Dorothy",
+  "George",
+  "Carol",
+  "Edward",
+  "Amanda",
+  "Ronald",
+  "Melissa",
+  "Anthony",
+  "Deborah",
+  "Frank",
+  "Stephanie",
+  "Ryan",
+  "Rebecca",
+  "Gary",
+  "Sharon",
+  "Nicholas",
+  "Laura",
+  "Eric",
+  "Cynthia",
+  "Jonathan",
+  "Kathleen",
+  "Stephen",
+  "Amy",
+  "Larry",
+  "Angela",
+  "Justin",
+  "Shirley",
+  "Scott",
+  "Anna",
+  "Brandon",
+  "Brenda",
+  "Benjamin",
+  "Pamela",
+  "Samuel",
+  "Emma",
+  "Frank",
+  "Nicole",
+  "Gregory",
+  "Helen",
+  "Raymond",
+  "Samantha",
+  "Alexander",
+  "Katherine",
+  "Patrick",
+  "Christine",
+  "Jack",
+  "Debra",
+  "Dennis",
+  "Rachel",
+  "Jerry",
+  "Catherine",
+  "Tyler",
+  "Carolyn",
+  "Aaron",
+  "Janet",
 ];
 
 const lastNames = [
-  "Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis",
-  "Rodriguez", "Martinez", "Hernandez", "Lopez", "Gonzalez", "Wilson", "Anderson",
-  "Thomas", "Taylor", "Moore", "Jackson", "Martin", "Lee", "Perez", "Thompson",
-  "White", "Harris", "Sanchez", "Clark", "Ramirez", "Lewis", "Robinson", "Walker",
-  "Young", "Allen", "King", "Wright", "Scott", "Torres", "Peterson", "Phillips",
-  "Campbell", "Parker", "Evans", "Edwards", "Collins", "Reeves", "Stewart", "Morris",
-  "Morales", "Murphy", "Cook", "Rogers", "Gutierrez", "Ortiz", "Morgan", "Cooper",
-  "Peterson", "Hunter", "Hicks", "Crawford", "Henry", "Boyd", "Mason", "Moreno",
-  "Kennedy", "Warren", "Dixon", "Rivas", "Cohen", "Garrett", "Booth", "Sutton",
-  "Pierce", "Friedman", "Wray", "Salazar", "Wilcox", "Chung", "Solis", "Villarreal",
-  "Cohen", "Burnham", "Gould", "Carr", "Blackwell", "Gentry", "Cowan", "Rosenberg",
+  "Smith",
+  "Johnson",
+  "Williams",
+  "Brown",
+  "Jones",
+  "Garcia",
+  "Miller",
+  "Davis",
+  "Rodriguez",
+  "Martinez",
+  "Hernandez",
+  "Lopez",
+  "Gonzalez",
+  "Wilson",
+  "Anderson",
+  "Thomas",
+  "Taylor",
+  "Moore",
+  "Jackson",
+  "Martin",
+  "Lee",
+  "Perez",
+  "Thompson",
+  "White",
+  "Harris",
+  "Sanchez",
+  "Clark",
+  "Ramirez",
+  "Lewis",
+  "Robinson",
+  "Walker",
+  "Young",
+  "Allen",
+  "King",
+  "Wright",
+  "Scott",
+  "Torres",
+  "Peterson",
+  "Phillips",
+  "Campbell",
+  "Parker",
+  "Evans",
+  "Edwards",
+  "Collins",
+  "Reeves",
+  "Stewart",
+  "Morris",
+  "Morales",
+  "Murphy",
+  "Cook",
+  "Rogers",
+  "Gutierrez",
+  "Ortiz",
+  "Morgan",
+  "Cooper",
+  "Peterson",
+  "Hunter",
+  "Hicks",
+  "Crawford",
+  "Henry",
+  "Boyd",
+  "Mason",
+  "Moreno",
+  "Kennedy",
+  "Warren",
+  "Dixon",
+  "Rivas",
+  "Cohen",
+  "Garrett",
+  "Booth",
+  "Sutton",
+  "Pierce",
+  "Friedman",
+  "Wray",
+  "Salazar",
+  "Wilcox",
+  "Chung",
+  "Solis",
+  "Villarreal",
+  "Cohen",
+  "Burnham",
+  "Gould",
+  "Carr",
+  "Blackwell",
+  "Gentry",
+  "Cowan",
+  "Rosenberg",
 ];
 
 const domainNames = ["example.test", "test.local", "sample.test"];
@@ -75,8 +235,18 @@ const testTemplates = [
   { code: "TIBC", name: "Total Iron Binding Capacity", basePriceCents: 3200, turnaroundHours: 24 },
   { code: "FERR", name: "Ferritin", basePriceCents: 4200, turnaroundHours: 24 },
   { code: "PT", name: "Prothrombin Time", basePriceCents: 4000, turnaroundHours: 12 },
-  { code: "PTT", name: "Activated Partial Thromboplastin Time", basePriceCents: 4100, turnaroundHours: 12 },
-  { code: "INR", name: "International Normalized Ratio", basePriceCents: 3900, turnaroundHours: 12 },
+  {
+    code: "PTT",
+    name: "Activated Partial Thromboplastin Time",
+    basePriceCents: 4100,
+    turnaroundHours: 12,
+  },
+  {
+    code: "INR",
+    name: "International Normalized Ratio",
+    basePriceCents: 3900,
+    turnaroundHours: 12,
+  },
   { code: "TROPO", name: "Troponin", basePriceCents: 5500, turnaroundHours: 6 },
   { code: "MYOG", name: "Myoglobin", basePriceCents: 4500, turnaroundHours: 12 },
   { code: "LACT", name: "Lactate", basePriceCents: 4200, turnaroundHours: 8 },
@@ -110,14 +280,18 @@ function generatePatients(count: number) {
     const lastName = randomChoice(lastNames);
     const emailChance = Math.random() > 0.2; // 80% have email
     const phoneChance = Math.random() > 0.3; // 70% have phone
-    
+
     rows.push({
       id: `patient-${String(i).padStart(6, "0")}`,
       firstName,
       lastName,
       dateOfBirth: randomDateOfBirth(),
-      email: emailChance ? `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${randomChoice(domainNames)}` : null,
-      phone: phoneChance ? `555-${areaCode(i)}-${exchangeCode(i + 100)}-${subscriberNumber(i)}` : null,
+      email: emailChance
+        ? `${firstName.toLowerCase()}.${lastName.toLowerCase()}@${randomChoice(domainNames)}`
+        : null,
+      phone: phoneChance
+        ? `555-${areaCode(i)}-${exchangeCode(i + 100)}-${subscriberNumber(i)}`
+        : null,
       createdAt: NOW,
       updatedAt: NOW,
     });
@@ -146,25 +320,25 @@ function generateLabTests(count: number) {
 function generateOrders(patientCount: number, orderCount: number, _testCount: number) {
   const orders = [];
   const baseDate = new Date("2024-01-01");
-  
+
   for (let i = 0; i < orderCount; i++) {
     const daysOffset = randomInt(0, 380);
     const orderedAt = new Date(baseDate);
     orderedAt.setDate(orderedAt.getDate() + daysOffset);
-    
+
     const turnaroundHours = randomInt(6, 72);
     const estimatedReadyAt = new Date(orderedAt);
     estimatedReadyAt.setHours(estimatedReadyAt.getHours() + turnaroundHours);
-    
+
     const statuses = ["pending", "in_progress", "completed", "cancelled"] as const;
     const statusWeights = [0.2, 0.15, 0.55, 0.1]; // More completed orders
     const rand = Math.random();
-    let status: typeof statuses[number];
+    let status: (typeof statuses)[number];
     if (rand < statusWeights[0]) status = "pending";
     else if (rand < statusWeights[0] + statusWeights[1]) status = "in_progress";
     else if (rand < statusWeights[0] + statusWeights[1] + statusWeights[2]) status = "completed";
     else status = "cancelled";
-    
+
     orders.push({
       id: `order-${String(i).padStart(7, "0")}`,
       patientId: `patient-${String(randomInt(0, patientCount - 1)).padStart(6, "0")}`,
@@ -184,19 +358,19 @@ function generateOrderTests(
   testRows: ReturnType<typeof generateLabTests>,
 ) {
   const orderTests = [];
-  
+
   for (const order of orders) {
     const testCount = randomInt(1, Math.min(5, testRows.length));
     const selectedTests = new Set<string>();
     let totalCents = 0;
-    
+
     // Select random tests for this order
     while (selectedTests.size < testCount) {
       const test = randomChoice(testRows);
       if (!selectedTests.has(test.id)) {
         selectedTests.add(test.id);
         totalCents += test.priceCents;
-        
+
         orderTests.push({
           orderId: order.id,
           labTestId: test.id,
@@ -207,11 +381,11 @@ function generateOrderTests(
         });
       }
     }
-    
+
     // Update order total
     order.totalCents = totalCents;
   }
-  
+
   return orderTests;
 }
 
@@ -222,26 +396,26 @@ export async function seedLargeDatabase(db: AppDatabase): Promise<void> {
   const BATCH_SIZE = 1000;
 
   console.time("Total seed time");
-  
+
   await db.transaction(async (transaction) => {
     console.log("Clearing existing data...");
     await transaction.delete(orderTests);
     await transaction.delete(orders);
     await transaction.delete(labTests);
     await transaction.delete(patients);
-    
+
     console.log(`Generating ${PATIENT_COUNT} patients...`);
     const patientRows = generatePatients(PATIENT_COUNT);
-    
+
     console.log(`Generating ${TEST_COUNT} lab tests...`);
     const testRows = generateLabTests(TEST_COUNT);
-    
+
     console.log(`Generating ${ORDER_COUNT} orders...`);
     const orderRows = generateOrders(PATIENT_COUNT, ORDER_COUNT, TEST_COUNT);
-    
+
     console.log("Generating order-test mappings...");
     const orderTestRows = generateOrderTests(orderRows, testRows);
-    
+
     console.log("Inserting patients...");
     for (let i = 0; i < patientRows.length; i += BATCH_SIZE) {
       const batch = patientRows.slice(i, i + BATCH_SIZE);
@@ -250,10 +424,10 @@ export async function seedLargeDatabase(db: AppDatabase): Promise<void> {
         console.log(`  Inserted ${Math.min(i + BATCH_SIZE, patientRows.length)} patients...`);
       }
     }
-    
+
     console.log("Inserting lab tests...");
     await transaction.insert(labTests).values(testRows);
-    
+
     console.log("Inserting orders...");
     for (let i = 0; i < orderRows.length; i += BATCH_SIZE) {
       const batch = orderRows.slice(i, i + BATCH_SIZE);
@@ -262,7 +436,7 @@ export async function seedLargeDatabase(db: AppDatabase): Promise<void> {
         console.log(`  Inserted ${Math.min(i + BATCH_SIZE, orderRows.length)} orders...`);
       }
     }
-    
+
     console.log("Inserting order tests...");
     for (let i = 0; i < orderTestRows.length; i += BATCH_SIZE) {
       const batch = orderTestRows.slice(i, i + BATCH_SIZE);
@@ -272,9 +446,11 @@ export async function seedLargeDatabase(db: AppDatabase): Promise<void> {
       }
     }
   });
-  
+
   console.timeEnd("Total seed time");
-  console.log(`\n✅ Seeded ${PATIENT_COUNT} patients, ${TEST_COUNT} lab tests, ${ORDER_COUNT} orders, and ~${(ORDER_COUNT * 3).toLocaleString()} order-tests.`);
+  console.log(
+    `\n✅ Seeded ${PATIENT_COUNT} patients, ${TEST_COUNT} lab tests, ${ORDER_COUNT} orders, and ~${(ORDER_COUNT * 3).toLocaleString()} order-tests.`,
+  );
 }
 
 if (import.meta.main) {
