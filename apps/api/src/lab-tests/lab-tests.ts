@@ -1,0 +1,217 @@
+import {
+  createLabTestSchema,
+  patchLabTestSchema,
+  labTestListQuerySchema,
+  type ApiError,
+  type LabTestListResponse,
+  type LabTestResponse,
+} from "@lab-orders/contracts";
+import { and, asc, eq, or, sql } from "drizzle-orm";
+import { Hono } from "hono";
+import { z } from "zod";
+import type { AppDatabase } from "../db/client";
+import { labTests } from "../db/schema";
+
+const cursorSchema = z.object({
+  search: z.string(),
+  active: z.enum(["true", "false", ""]),
+  code: z.string(),
+  id: z.string(),
+});
+
+type Cursor = z.infer<typeof cursorSchema>;
+
+function encodeCursor(cursor: Cursor) {
+  const bytes = new TextEncoder().encode(JSON.stringify(cursor));
+  return btoa(String.fromCharCode(...bytes));
+}
+
+function decodeCursor(value: string): Cursor | undefined {
+  try {
+    const bytes = Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+    return cursorSchema.parse(JSON.parse(new TextDecoder().decode(bytes)));
+  } catch {
+    return undefined;
+  }
+}
+
+function toResponse(row: typeof labTests.$inferSelect): LabTestResponse {
+  return {
+    id: row.id,
+    code: row.code,
+    name: row.name,
+    priceCents: row.priceCents,
+    turnaroundHours: row.turnaroundHours,
+    active: row.active,
+    createdAt: row.createdAt,
+    updatedAt: row.updatedAt,
+  };
+}
+
+function error(code: string, message: string, details?: unknown): ApiError {
+  return { code, message, ...(details === undefined ? {} : { details }) };
+}
+
+function isUniqueCodeError(cause: unknown) {
+  let current = cause;
+  while (current) {
+    const message = current instanceof Error ? current.message : String(current);
+    if (
+      /UNIQUE constraint failed: lab_tests\.code/i.test(message) ||
+      /lab_tests_code_unique/i.test(message)
+    ) {
+      return true;
+    }
+    current = current instanceof Error ? current.cause : undefined;
+  }
+  return false;
+}
+
+async function requestJson(context: { req: { json: () => Promise<unknown> } }) {
+  try {
+    return { data: await context.req.json() } as const;
+  } catch {
+    return { error: error("INVALID_JSON", "Request body must be valid JSON") } as const;
+  }
+}
+
+export function createLabTestRoutes(db: AppDatabase) {
+  const app = new Hono();
+
+  app.get("/", async (context) => {
+    const parsed = labTestListQuerySchema.safeParse(context.req.query());
+    if (!parsed.success) {
+      return context.json(
+        error("VALIDATION_ERROR", "Query validation failed", parsed.error.issues),
+        400,
+      );
+    }
+
+    const search = parsed.data.search?.toLocaleLowerCase() ?? "";
+    const activeFilter =
+      parsed.data.active === undefined ? "" : parsed.data.active ? "true" : "false";
+    const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
+    if (
+      parsed.data.after &&
+      (!cursor || cursor.search !== search || cursor.active !== activeFilter)
+    ) {
+      return context.json(error("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
+    }
+
+    const searchCondition = search
+      ? or(
+          sql`instr(lower(${labTests.code}), ${search}) > 0`,
+          sql`instr(lower(${labTests.name}), ${search}) > 0`,
+        )
+      : undefined;
+    const activeCondition =
+      parsed.data.active === undefined ? undefined : eq(labTests.active, parsed.data.active);
+    const cursorCondition = cursor
+      ? sql`(
+          ${labTests.code} > ${cursor.code}
+          or (${labTests.code} = ${cursor.code} and ${labTests.id} > ${cursor.id})
+        )`
+      : undefined;
+
+    const rows = await db
+      .select()
+      .from(labTests)
+      .where(and(searchCondition, activeCondition, cursorCondition))
+      .orderBy(asc(labTests.code), asc(labTests.id))
+      .limit(parsed.data.limit + 1);
+    const hasMore = rows.length > parsed.data.limit;
+    const page = rows.slice(0, parsed.data.limit);
+    const last = page.at(-1);
+    const response: LabTestListResponse = {
+      items: page.map(toResponse),
+      hasMore,
+      nextCursor:
+        hasMore && last
+          ? encodeCursor({
+              search,
+              active: activeFilter,
+              code: last.code,
+              id: last.id,
+            })
+          : null,
+    };
+    return context.json(response);
+  });
+
+  app.get("/:id", async (context) => {
+    const row = await db.query.labTests.findFirst({
+      where: eq(labTests.id, context.req.param("id")),
+    });
+    if (!row) return context.json(error("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
+    return context.json(toResponse(row));
+  });
+
+  app.post("/", async (context) => {
+    const body = await requestJson(context);
+    if ("error" in body) return context.json(body.error, 400);
+    const parsed = createLabTestSchema.safeParse(body.data);
+    if (!parsed.success) {
+      return context.json(
+        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        422,
+      );
+    }
+
+    const now = new Date().toISOString();
+    const row: typeof labTests.$inferInsert = {
+      id: crypto.randomUUID(),
+      ...parsed.data,
+      createdAt: now,
+      updatedAt: now,
+    };
+    try {
+      await db.insert(labTests).values(row);
+    } catch (cause) {
+      if (isUniqueCodeError(cause)) {
+        return context.json(
+          error("DUPLICATE_CODE", "A lab test with this code already exists"),
+          409,
+        );
+      }
+      throw cause;
+    }
+    context.header("Location", `/api/tests/${row.id}`);
+    return context.json(toResponse(row as typeof labTests.$inferSelect), 201);
+  });
+
+  app.patch("/:id", async (context) => {
+    const body = await requestJson(context);
+    if ("error" in body) return context.json(body.error, 400);
+    const parsed = patchLabTestSchema.safeParse(body.data);
+    if (!parsed.success) {
+      return context.json(
+        error("VALIDATION_ERROR", "Request validation failed", parsed.error.issues),
+        422,
+      );
+    }
+
+    const existing = await db.query.labTests.findFirst({
+      where: eq(labTests.id, context.req.param("id")),
+    });
+    if (!existing) return context.json(error("LAB_TEST_NOT_FOUND", "Lab test not found"), 404);
+
+    const changes = {
+      ...parsed.data,
+      updatedAt: new Date().toISOString(),
+    };
+    try {
+      await db.update(labTests).set(changes).where(eq(labTests.id, existing.id));
+    } catch (cause) {
+      if (isUniqueCodeError(cause)) {
+        return context.json(
+          error("DUPLICATE_CODE", "A lab test with this code already exists"),
+          409,
+        );
+      }
+      throw cause;
+    }
+    return context.json(toResponse({ ...existing, ...changes }));
+  });
+
+  return app;
+}

@@ -9,6 +9,8 @@ import {
 import { z } from "zod";
 import { AppShell } from "./app-shell";
 import { Button } from "./components/button";
+import { LabTestListPage } from "./features/lab-tests/lab-test-list";
+import { EditLabTestPage, NewLabTestPage } from "./features/lab-tests/lab-test-pages";
 import { PatientListPage } from "./features/patients/patient-list";
 import { EditPatientPage, NewPatientPage } from "./features/patients/patient-pages";
 
@@ -87,12 +89,24 @@ const editPatientRoute = createRoute({
 const testsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tests",
-  component: () => (
-    <Page
-      title="Lab Tests"
-      description="Maintain test codes, pricing, and elapsed-hour turnaround times."
-    />
-  ),
+  validateSearch: z.object({
+    search: z.string().optional(),
+    active: z.enum(["true", "false"]).optional(),
+  }),
+  component: LabTestListPage,
+});
+
+const newTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tests/new",
+  component: NewLabTestPage,
+});
+
+const editTestRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/tests/$testId",
+  validateSearch: z.object({ saved: z.coerce.boolean().optional() }),
+  component: EditLabTestPage,
 });
 
 const ordersRoute = createRoute({
@@ -112,6 +126,8 @@ const routeTree = rootRoute.addChildren([
   newPatientRoute,
   editPatientRoute,
   testsRoute,
+  newTestRoute,
+  editTestRoute,
   ordersRoute,
 ]);
 

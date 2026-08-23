@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 3 — Patients Vertical Slice (4e21b94)
-- **Next:** Phase 4 — Lab Test Catalog
+- **Last Commit:** Phase 4 — Lab Test Catalog (pending)
+- **Next:** Phase 5 — Order domain/API
 
 ## Completed Work
 
@@ -53,34 +53,28 @@
 - No `useEffect` usage
 - **48 tests passing**, `bun run check` passes
 
+### Phase 4 — Lab Test Catalog ✅
+
+**Completed:**
+
+- Catalog Zod contracts with uppercase code normalization and exact dollar↔cents helpers
+- Searchable, active-filtered, cursor-paginated catalog API (`(code, id)`)
+- Create/patch with 409 duplicate-code mapping
+- `/tests` list plus create/edit forms with dollar input, active toggle, and async states
+- Contract, API integration, and React behavior tests
+- **96 tests passing**, `bun run check` passes
+
+**Acceptance → tests:**
+- View/create/edit: API CRUD + `lab-tests.test.tsx` create/list
+- Normalized codes + 409: `createLabTestSchema`, API duplicate test, UI conflict test
+- Exact cents: `money.test.ts`
+- Price ≥ 0, turnaround > 0, non-blank: contract + API validation tests
+- Active visible/editable: list badge + form checkbox + API patch
+- Filters + cursor reset: API compose/mismatch tests + URL filter behavior test
+
 ## In Progress
 
-### Phase 4 — Lab Test Catalog
-
-**What Needs to Happen:**
-
-1. **Contracts (4.1 — TDD):** Write tests then implement:
-   - `createLabTestSchema` — required: code, name, priceCents, turnaroundHours; optional: active
-   - `patchLabTestSchema` — all fields optional
-   - `labTestResponseSchema` — response with id, timestamps
-   - `labTestListQuerySchema` — search, active filter, limit, pagination
-   - `labTestListResponseSchema` — items array with cursor
-   - Validation: code is unique and non-blank, name non-blank, price ≥ 0, turnaround > 0
-
-2. **API read path (4.2 — TDD):** integration tests then implementation:
-   - GET /api/tests with search, active filter, cursor pagination
-   - GET /api/tests/:id
-   - Cursor ordering: (code, id)
-
-3. **API write path (4.3 — TDD):** integration tests then implementation:
-   - POST /api/tests (create)
-   - PATCH /api/tests/:id (update, including active toggle)
-   - Unique constraint error handling (409 Conflict)
-
-4. **Web list and forms (4.4–4.5 — TDD):** behavior tests then UI:
-   - /tests list with search, active toggle filter, load-more
-   - /tests/new and /tests/:testId forms
-   - TanStack Query/Form/Router, no useEffect
+### Phase 5 — Order Domain and API
 
 ## Remaining Phases
 
@@ -255,14 +249,14 @@ bun run check              # Verify Phase 3 is stable
 - [x] Long content doesn't break UI
 - [x] Ready for code review
 
-### Phase 4 (To Do)
+### Phase 4 ✅
 
-- [ ] All acceptance criteria from plan tested (automated or manual)
-- [ ] `bun run check` passes (format, lint, typecheck, test, build)
-- [ ] No `useEffect` in React source (`bun run lint:no-use-effect` clean)
-- [ ] All async UI states represented (loading, error, empty, success)
-- [ ] All error paths have useful feedback
-- [ ] Keyboard navigation works for forms/lists
-- [ ] Mobile layout tested (narrow viewport)
-- [ ] Long content doesn't break UI
-- [ ] Ready for code review
+- [x] All acceptance criteria from plan tested (automated or manual)
+- [x] `bun run check` passes (format, lint, typecheck, test, build)
+- [x] No `useEffect` in React source (`bun run lint:no-use-effect` clean)
+- [x] All async UI states represented (loading, error, empty, success)
+- [x] All error paths have useful feedback
+- [x] Keyboard navigation works for forms/lists
+- [x] Mobile layout tested (narrow viewport — list/form stack)
+- [x] Long content doesn't break UI (table overflow-x)
+- [x] Ready for code review
