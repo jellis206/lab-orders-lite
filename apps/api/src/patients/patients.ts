@@ -1,5 +1,8 @@
 import {
+  contactAfterPatientPatch,
+  contactRequiredMessage,
   createPatientSchema,
+  hasContactMethod,
   patchPatientSchema,
   patientListQuerySchema,
   type PatientListResponse,
@@ -159,6 +162,16 @@ export function createPatientRoutes(db: AppDatabase) {
     });
     if (!existing) return context.json(apiError("PATIENT_NOT_FOUND", "Patient not found"), 404);
 
+    if (!hasContactMethod(contactAfterPatientPatch(existing, parsed.data))) {
+      return context.json(
+        apiError("VALIDATION_ERROR", "Request validation failed", [
+          { path: ["email"], message: contactRequiredMessage },
+          { path: ["phone"], message: contactRequiredMessage },
+        ]),
+        422,
+      );
+    }
+
     const changes: Partial<typeof patients.$inferSelect> & { updatedAt: string } = {
       ...parsed.data,
       updatedAt: new Date().toISOString(),
@@ -168,15 +181,6 @@ export function createPatientRoutes(db: AppDatabase) {
     }
     if (Object.hasOwn(parsed.data, "phone")) {
       changes.phone = parsed.data.phone ?? null;
-    }
-    const next = { ...existing, ...changes };
-    if (!next.email && !next.phone) {
-      return context.json(
-        apiError("VALIDATION_ERROR", "Request validation failed", [
-          { path: ["email"], message: "Provide an email or phone number so we can share results" },
-        ]),
-        422,
-      );
     }
     await db.update(patients).set(changes).where(eq(patients.id, existing.id));
     return context.json(toResponse({ ...existing, ...changes }));

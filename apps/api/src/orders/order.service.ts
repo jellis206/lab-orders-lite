@@ -41,7 +41,11 @@ type OrderWriter = {
   insert: AppDatabase["insert"];
 };
 
-async function writeOrderRows(db: OrderWriter, order: PersistedOrder, snapshots: OrderSnapshot[]) {
+export async function writeOrderRows(
+  db: OrderWriter,
+  order: PersistedOrder,
+  snapshots: OrderSnapshot[],
+) {
   await db.insert(orders).values(order);
   await db.insert(orderTests).values(
     snapshots.map((snapshot) => ({
@@ -49,16 +53,6 @@ async function writeOrderRows(db: OrderWriter, order: PersistedOrder, snapshots:
       ...snapshot,
     })),
   );
-}
-
-export async function persistOrderRows(
-  db: AppDatabase,
-  order: PersistedOrder,
-  snapshots: OrderSnapshot[],
-) {
-  await db.transaction(async (transaction) => {
-    await writeOrderRows(transaction, order, snapshots);
-  });
 }
 
 export async function createOrderRecord(

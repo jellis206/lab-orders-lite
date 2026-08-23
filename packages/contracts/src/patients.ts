@@ -40,10 +40,24 @@ function optionalContact(schema: z.ZodType<string>) {
   }, schema.optional());
 }
 
-const contactRequiredMessage = "Provide an email or phone number so we can share results";
+export const contactRequiredMessage = "Provide an email or phone number so we can share results";
+
+export function hasContactMethod(value: { email?: string | null; phone?: string | null }) {
+  return Boolean(value.email || value.phone);
+}
+
+export function contactAfterPatientPatch(
+  existing: { email: string | null; phone: string | null },
+  patch: { email?: string; phone?: string },
+) {
+  return {
+    email: Object.hasOwn(patch, "email") ? (patch.email ?? null) : existing.email,
+    phone: Object.hasOwn(patch, "phone") ? (patch.phone ?? null) : existing.phone,
+  };
+}
 
 function requireContactMethod(value: { email?: string; phone?: string }, context: z.RefinementCtx) {
-  if (value.email || value.phone) return;
+  if (hasContactMethod(value)) return;
   context.addIssue({ code: "custom", path: ["email"], message: contactRequiredMessage });
   context.addIssue({ code: "custom", path: ["phone"], message: contactRequiredMessage });
 }

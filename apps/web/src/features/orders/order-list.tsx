@@ -4,10 +4,12 @@ import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
 import { Listbox, ListboxOption } from "../../components/listbox";
+import { formatCents } from "@lab-orders/contracts";
+import { orderStatuses } from "@lab-orders/domain";
 import { orderListOptions } from "./api";
-import { formatDateTime, formatMoney, formatStatus } from "./format";
+import { formatDateTime, formatStatus } from "./format";
 
-const statuses = ["pending", "in_progress", "completed", "cancelled"] as const;
+const statuses = orderStatuses;
 type OrderStatusFilter = (typeof statuses)[number];
 
 function parseOrderStatusFilter(value: string): OrderStatusFilter | undefined {
@@ -161,7 +163,7 @@ export function OrderListPage() {
                     <td className="px-5 py-4 capitalize">{formatStatus(order.status)}</td>
                     <td className="px-5 py-4 text-app-muted">{formatDateTime(order.orderedAt)}</td>
                     <td className="px-5 py-4 text-app-muted">{order.testCount}</td>
-                    <td className="px-5 py-4 text-app-muted">{formatMoney(order.totalCents)}</td>
+                    <td className="px-5 py-4 text-app-muted">{formatCents(order.totalCents)}</td>
                     <td className="px-5 py-4 text-app-muted">
                       {formatDateTime(order.estimatedReadyAt)}
                     </td>

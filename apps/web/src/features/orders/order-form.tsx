@@ -1,5 +1,6 @@
 import {
   createOrderSchema,
+  formatCents,
   type LabTestResponse,
   type PatientResponse,
 } from "@lab-orders/contracts";
@@ -14,7 +15,7 @@ import { Input } from "../../components/input";
 import { labTestListOptions } from "../lab-tests/api";
 import { patientListOptions } from "../patients/api";
 import { createOrder, orderKeys } from "./api";
-import { formatDateTime, formatMoney } from "./format";
+import { formatDateTime } from "./format";
 
 type FormValues = {
   patientId: string;
@@ -264,7 +265,7 @@ export function OrderForm() {
                               {test.code} · {test.name}
                             </span>
                             <span className="text-sm text-app-muted">
-                              {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
+                              {formatCents(test.priceCents)} · {test.turnaroundHours} hours
                             </span>
                           </span>
                         </label>
@@ -297,7 +298,7 @@ export function OrderForm() {
                         </span>
                         <span className="flex items-center gap-3">
                           <span className="text-app-muted">
-                            {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
+                            {formatCents(test.priceCents)} · {test.turnaroundHours} hours
                           </span>
                           <button
                             type="button"
@@ -330,7 +331,7 @@ export function OrderForm() {
           <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
             <div>
               <dt className="text-zinc-500">Total</dt>
-              <dd className="font-semibold text-app-text">{formatMoney(previewTotal)}</dd>
+              <dd className="font-semibold text-app-text">{formatCents(previewTotal)}</dd>
             </div>
             <div>
               <dt className="text-zinc-500">Slowest turnaround</dt>

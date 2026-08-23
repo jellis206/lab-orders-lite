@@ -1,9 +1,3 @@
-import { formatCents } from "@lab-orders/contracts";
-
-export function formatMoney(cents: number) {
-  return formatCents(cents);
-}
-
 const dateTimeFormatter = new Intl.DateTimeFormat("en-US", {
   dateStyle: "medium",
   timeStyle: "short",

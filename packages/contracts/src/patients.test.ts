@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import {
+  contactAfterPatientPatch,
   createPatientSchema,
+  hasContactMethod,
   patchPatientSchema,
   patientResponseSchema,
   patientListQuerySchema,
@@ -114,6 +116,29 @@ describe("createPatientSchema", () => {
       firstName: "Jane",
     });
     expect(result.success).toBe(false);
+  });
+});
+
+describe("contactAfterPatientPatch", () => {
+  it("keeps omitted contact fields from the existing patient", () => {
+    expect(contactAfterPatientPatch({ email: null, phone: "555-0101" }, {})).toEqual({
+      email: null,
+      phone: "555-0101",
+    });
+  });
+
+  it("detects clearing the only remaining contact method", () => {
+    const next = contactAfterPatientPatch({ email: null, phone: "555-0101" }, { phone: undefined });
+    expect(hasContactMethod(next)).toBe(false);
+  });
+
+  it("allows clearing email when a phone number remains", () => {
+    const next = contactAfterPatientPatch(
+      { email: "ada@example.test", phone: "555-0101" },
+      { email: undefined },
+    );
+    expect(next).toEqual({ email: null, phone: "555-0101" });
+    expect(hasContactMethod(next)).toBe(true);
   });
 });
 

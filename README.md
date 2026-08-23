@@ -195,6 +195,25 @@ bun run db:seed
 The seed is deterministic and safe to rerun. Local data is persisted in the ignored `.data/lab-orders.db` file. After
 seeding, stop the standalone database process with `Ctrl+C`; `bun dev` starts its own process on the same port.
 
+#### Large-scale testing
+
+For performance testing and UI validation at scale, use the large seed dataset:
+
+```bash
+bun run db:seed-large
+```
+
+This populates the database with:
+
+- **5,000 patients** with realistic names, contact info, and DOBs
+- **45 lab tests** covering common medical tests
+- **50,000 orders** distributed across patients
+- **~150,000 order-test mappings** (most orders have 2–4 tests)
+- Order dates spread across 2024–2025
+- Order statuses distributed realistically (~55% completed, 20% pending, 15% in_progress, 10% cancelled)
+
+The dataset is generated in-memory and inserted in ~4 seconds. It's safe to rerun and completely replaces existing data.
+
 ### Run the application
 
 ```bash
@@ -227,12 +246,25 @@ overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
 | `bun run db:dev`       | Start the persisted local Turso server                  |
 | `bun run db:generate`  | Generate Drizzle migrations                             |
 | `bun run db:migrate`   | Apply committed migrations                              |
-| `bun run db:seed`      | Seed deterministic fictional data                       |
+| `bun run db:seed`      | Seed deterministic small dataset (4 patients, 6 tests, 4 orders) |
+| `bun run db:seed-large` | Seed large dataset for scale testing (5k patients, 50k orders) |
+
+Database scripts live in the `tools/db/` directory and are not included in production builds.
 | `bun run db:studio`    | Open Drizzle Studio                                     |
 
 `bun run e2e` reuses a running `bun dev` stack when one is already up. Otherwise it starts an isolated file database,
 migrates, seeds, then serves the API and Vite app. Stop any conflicting process on ports 3000 or 5173 first if the
 isolated server cannot bind.
+
+## Scripts and tooling
+
+One-off scripts for development live in `tools/db/` and are excluded from production builds:
+
+- `db-seed.ts` – Seeds the small deterministic dataset
+- `db-seed-large.ts` – Seeds a large dataset for scale testing (~5k patients, 50k orders)
+- `db-migrate.ts` – Applies pending database migrations
+
+Run them via `bun run db:seed`, `bun run db:seed-large`, and `bun run db:migrate` from the root.
 
 ## Scope and trade-offs
 
@@ -269,6 +301,18 @@ Each ticket defines its problem, approach, commit-sized steps, acceptance criter
 
 ## AI usage
 
-AI tools accelerated planning and implementation. Generated suggestions were reviewed, adapted, tested, and kept only
-when they remained understandable and consistent with the project’s constraints. Every significant design and
-implementation choice should be explainable during a follow-up interview.
+AI coding agents were used throughout planning and implementation. I treated them as a drafting tool, not as an
+authority: every kept change was read, tested, and edited until I could explain it.
+
+Where they helped:
+
+- Drafting `project.md` and the phase tickets under `plans/`
+- Scaffolding feature modules, Zod contracts, tests, and Catalyst/Headless UI adaptations
+- Proposing review fixes (including CodeRabbit findings)
+
+What I changed or rejected:
+
+- Kept the stack in `project.md` (Bun, Hono, Drizzle, TanStack, Zod) and did not add extra frameworks
+- Moved business rules into contracts/domain instead of growing Hono handlers
+- Banned `useEffect` in app code; Query/Router/Form own those concerns
+- Dropped suggestions that added generic repositories, extra client state libraries, or business-calendar turnaround

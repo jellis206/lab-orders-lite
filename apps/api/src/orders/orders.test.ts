@@ -8,7 +8,8 @@ import { eq } from "drizzle-orm";
 import { createApp } from "../app";
 import { labTests, orders, patients } from "../db/schema";
 import { createTestDatabase } from "../test/database";
-import { persistOrderRows, transitionOrderStatus } from "./order.service";
+import { persistOrderRows } from "../test/persist-order";
+import { transitionOrderStatus } from "./order.service";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
 let app: ReturnType<typeof createApp>;

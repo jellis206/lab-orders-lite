@@ -8,6 +8,7 @@ import {
   type RouterHistory,
 } from "@tanstack/react-router";
 import { z } from "zod";
+import { orderStatusSchema } from "@lab-orders/contracts";
 import { AppShell } from "./app-shell";
 import { Button } from "./components/button";
 import { LabTestListPage } from "./features/lab-tests/lab-test-list";
@@ -134,7 +135,7 @@ const ordersRoute = createRoute({
   path: "/orders",
   validateSearch: z.object({
     search: z.string().optional(),
-    status: z.enum(["pending", "in_progress", "completed", "cancelled"]).optional(),
+    status: orderStatusSchema.optional(),
   }),
   component: OrderListPage,
 });

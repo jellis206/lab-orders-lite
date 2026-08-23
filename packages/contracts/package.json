@@ -12,6 +12,7 @@
     "format": "oxfmt --write src"
   },
   "dependencies": {
+    "@lab-orders/domain": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {

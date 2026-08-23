@@ -43,3 +43,6 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# optional local Oxlint plugin (not part of the submission)
+tools/oxlint/
