@@ -1,9 +1,11 @@
+import { orderStatuses } from "@lab-orders/domain";
 import { describe, expect, it } from "bun:test";
 import {
   createOrderSchema,
   orderDetailResponseSchema,
   orderListQuerySchema,
   orderListResponseSchema,
+  orderStatusSchema,
   patchOrderStatusSchema,
 } from "./orders";
 
@@ -43,6 +45,12 @@ describe("createOrderSchema", () => {
         totalCents: 3000,
       }).success,
     ).toBe(false);
+  });
+});
+
+describe("orderStatusSchema", () => {
+  it("stays aligned with domain order statuses", () => {
+    expect([...orderStatusSchema.options]).toEqual([...orderStatuses]);
   });
 });
 

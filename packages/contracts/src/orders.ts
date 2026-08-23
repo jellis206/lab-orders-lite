@@ -1,7 +1,6 @@
-import { orderStatuses } from "@lab-orders/domain";
 import { z } from "zod";
 
-export const orderStatusSchema = z.enum(orderStatuses);
+export const orderStatusSchema = z.enum(["pending", "in_progress", "completed", "cancelled"]);
 
 export const createOrderSchema = z
   .object({

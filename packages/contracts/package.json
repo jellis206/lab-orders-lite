@@ -12,10 +12,10 @@
     "format": "oxfmt --write src"
   },
   "dependencies": {
-    "@lab-orders/domain": "workspace:*",
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@lab-orders/domain": "workspace:*",
     "@types/bun": "^1.4.0",
     "typescript": "~6.0.2"
   }
