@@ -6,7 +6,7 @@ Lab Orders Lite is intentionally a **polished vertical slice**, not a miniature 
 prioritizes correctness, clear boundaries, strong typing, high-value tests, and an excellent local-development
 experience.
 
-## What it will support
+## What it supports
 
 - View, search, create, and edit patients
 - View, filter, create, edit, activate, and deactivate lab tests
@@ -81,7 +81,9 @@ lab-orders-lite/
 ├── packages/
 │   ├── contracts/    # Framework-independent Zod API contracts
 │   └── domain/       # Pure business rules and calculations
+├── drizzle/          # Committed database migrations and metadata
 ├── plans/            # Phase tickets and acceptance criteria
+├── scripts/          # Isolated Playwright server helper
 ├── orig_instructions.md
 └── project.md
 ```
@@ -168,7 +170,8 @@ synchronization, Router owns URL state, Form owns form state, and derived values
 ### Prerequisites
 
 - [Bun](https://bun.sh/) 1.3 or newer
-- [Turso CLI](https://docs.turso.tech/cli/introduction) for the local database phase
+- [Turso CLI](https://docs.turso.tech/cli/introduction) for local development
+- Chromium for Playwright: `bunx playwright install chromium`
 
 ### Install and initialize
 
@@ -189,7 +192,8 @@ bun run db:migrate
 bun run db:seed
 ```
 
-The seed is deterministic and safe to rerun. Local data is persisted in the ignored `.data/lab-orders.db` file.
+The seed is deterministic and safe to rerun. Local data is persisted in the ignored `.data/lab-orders.db` file. After
+seeding, stop the standalone database process with `Ctrl+C`; `bun dev` starts its own process on the same port.
 
 ### Run the application
 
@@ -203,24 +207,32 @@ This starts and coordinates all three development processes:
 - Hono API: <http://localhost:3000>
 - Vite web app: <http://localhost:5173>
 
-Vite proxies `/api` to Hono. Configuration defaults to the unauthenticated local endpoint; copy `.env.example` when overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
+Vite proxies `/api` to Hono. Configuration defaults to the unauthenticated local endpoint; copy `.env.example` when
+overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
 
 ## Root commands
 
-| Command               | Purpose                                                 |
-| --------------------- | ------------------------------------------------------- |
-| `bun dev`             | Start local Turso, API watch mode, and Vite             |
-| `bun test`            | Run unit, integration, and component tests              |
-| `bun run build`       | Build all applications                                  |
-| `bun run typecheck`   | Strictly type-check all workspaces                      |
-| `bun run lint`        | Lint all workspaces and enforce the no-`useEffect` rule |
-| `bun run format`      | Format repository source                                |
-| `bun run db:dev`      | Start the persisted local Turso server                  |
-| `bun run db:generate` | Generate Drizzle migrations                             |
-| `bun run db:migrate`  | Apply committed migrations                              |
-| `bun run db:seed`     | Seed deterministic fictional data                       |
+| Command                | Purpose                                                 |
+| ---------------------- | ------------------------------------------------------- |
+| `bun dev`              | Start local Turso, API watch mode, and Vite             |
+| `bun test`             | Run unit, integration, and component tests              |
+| `bun run e2e`          | Run the isolated Playwright primary-flow test           |
+| `bun run e2e:headed`   | Run Playwright with a visible browser                   |
+| `bun run build`        | Build all applications                                  |
+| `bun run typecheck`    | Strictly type-check all workspaces                      |
+| `bun run lint`         | Lint all workspaces and enforce the no-`useEffect` rule |
+| `bun run format`       | Format repository source                                |
+| `bun run format:check` | Check repository formatting without changing files      |
+| `bun run check`        | Run typecheck, lint, tests, and builds                  |
+| `bun run db:dev`       | Start the persisted local Turso server                  |
+| `bun run db:generate`  | Generate Drizzle migrations                             |
+| `bun run db:migrate`   | Apply committed migrations                              |
+| `bun run db:seed`      | Seed deterministic fictional data                       |
+| `bun run db:studio`    | Open Drizzle Studio                                     |
 
-The foundation and persistence commands are implemented. See the remaining delivery phases in [`plans/`](./plans/README.md).
+`bun run e2e` reuses a running `bun dev` stack when one is already up. Otherwise it starts an isolated file database,
+migrates, seeds, then serves the API and Vite app. Stop any conflicting process on ports 3000 or 5173 first if the
+isolated server cannot bind.
 
 ## Scope and trade-offs
 
@@ -236,8 +248,8 @@ The project deliberately does **not** include:
 - GraphQL, queues, event buses, or microservices
 - AI, embeddings, or vector search
 
-OpenAPI is deferred until the core workflow is complete. The goal is finished, explainable behavior rather than
-unfinished breadth.
+OpenAPI is deferred. The Playwright suite is intentionally one primary-flow test rather than a second copy of the unit
+and API suites. The goal is finished, explainable behavior rather than unfinished breadth.
 
 ## Delivery plan
 
@@ -257,6 +269,6 @@ Each ticket defines its problem, approach, commit-sized steps, acceptance criter
 
 ## AI usage
 
-AI tools are used as a planning and implementation accelerator. Generated suggestions are reviewed, adapted, tested, and
-kept only when they remain understandable and consistent with the project’s constraints. Every significant design and
-implementation choice should be explainable during the follow-up interview.
+AI tools accelerated planning and implementation. Generated suggestions were reviewed, adapted, tested, and kept only
+when they remained understandable and consistent with the project’s constraints. Every significant design and
+implementation choice should be explainable during a follow-up interview.

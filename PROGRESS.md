@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 8 — Quality and polish (pending)
-- **Next:** Phase 9 — Documentation
+- **Last Commit:** Phase 9 — Documentation
+- **Next:** Review and merge `implement-phases-3-9`
 
 ## Completed Work
 
@@ -124,9 +124,17 @@
 - Isolated Playwright happy path: create patient → multi-test order → detail/list
 - `bun run e2e` / `bun run e2e:headed`; `bun run check` stays deterministic by excluding Playwright specs
 
+### Phase 9 — Documentation ✅
+
+**Completed:**
+
+- README documents setup, architecture, domain rules, trade-offs, commands, and AI use
+- `.env.example` shows local Turso defaults
+- Phase tickets remain as implementation history in `plans/`
+
 ## Remaining Phases
 
-- **Phase 9** — Documentation (README, setup validation, AI disclosure)
+None. Phases 1–9 are implemented on `implement-phases-3-9`.
 
 ## Key Architectural Decisions
 
