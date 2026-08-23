@@ -71,8 +71,8 @@ export function OrderListPage() {
           />
           <Button type="submit">Search</Button>
         </form>
-        <div className="w-full sm:w-48">
-          <label className="text-sm font-medium text-app-text" htmlFor="order-status">
+        <fieldset className="w-full sm:w-48">
+          <label className="text-sm font-medium text-app-text block mb-1" htmlFor="order-status">
             Status
           </label>
           <Listbox
@@ -88,7 +88,7 @@ export function OrderListPage() {
                 }),
               });
             }}
-            className="mt-1"
+            className=""
           >
             <ListboxOption value="all">All statuses</ListboxOption>
             {statuses.map((value) => (
@@ -97,7 +97,7 @@ export function OrderListPage() {
               </ListboxOption>
             ))}
           </Listbox>
-        </div>
+        </fieldset>
         {(search || status) && (
           <button
             type="button"
