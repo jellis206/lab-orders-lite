@@ -43,6 +43,10 @@ describe("calculateEstimatedReadyAt", () => {
       "At least one turnaround is required",
     );
   });
+
+  test("keeps the catalog maximum turnaround as a valid ready timestamp", () => {
+    expect(calculateEstimatedReadyAt(orderedAt, [87_600])).toBe("2035-01-08T09:00:00.000Z");
+  });
 });
 
 describe("order status transitions", () => {

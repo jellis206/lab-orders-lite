@@ -22,7 +22,10 @@ type FormValues = {
 
 function toPayload(value: FormValues) {
   const price = parseDollarInput(value.price);
-  const turnaroundHours = Number.parseInt(value.turnaroundHours, 10);
+  const rawTurnaroundHours = value.turnaroundHours.trim();
+  const turnaroundHours = /^\d+$/.test(rawTurnaroundHours)
+    ? Number(rawTurnaroundHours)
+    : Number.NaN;
   return {
     code: value.code,
     name: value.name,

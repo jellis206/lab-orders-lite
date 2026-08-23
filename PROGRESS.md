@@ -195,6 +195,7 @@ bun run db:studio         # Open Drizzle Studio
 
 # Quality gate
 bun run check             # typecheck + lint + test + build
+bun run format:check      # Formatting is a separate command
 
 # Build
 bun run build             # Build both apps
@@ -202,43 +203,31 @@ bun run build             # Build both apps
 
 ## Playwright E2E Setup
 
-**Status:** Not yet created (will be added during Phase 8)
+**Status:** Phase 8 complete. Isolated happy-path coverage lives in `apps/web/e2e/primary-workflow.spec.ts` and `playwright.config.ts`.
 
-**When Creating Playwright Tests:**
+**Commands:**
 
-1. Create `apps/web/e2e/` directory with tests
-2. Use `playwright.config.ts` at workspace root or app level
-3. **Key workflows to test:**
-   - Create patient → list shows new patient
-   - Create order with multiple tests → verify total matches → verify ready date is correct
-   - Filter orders by patient → filter by status → load more pagination
-   - Edit patient → verify changes persist
-   - Deactivate lab test → cannot select in new order
-4. **Test isolation:** Use fresh DB state for each test (seed + reset between runs)
-5. **Headless vs headed:** Develop headed, run headless in CI
-6. **Commands:**
-   ```bash
-   bun run e2e              # Run Playwright tests headless
-   bun run e2e:headed      # Run with browser UI for debugging
-   bun run e2e:debug       # Pause on each step
-   ```
+```bash
+bun run e2e              # Run Playwright tests headless
+bun run e2e:headed      # Run with browser UI for debugging
+```
 
 ## Notes for Next Session
 
-1. **Patterns established in Phase 3:**
-   - **Cursor format:** base64-encoded JSON with search context to prevent cursor misuse across different searches
-   - **Contact field normalization:** blank strings → undefined → null in DB to avoid empty values
-   - **DOB validation:** ISO 8601 calendar date, not in future
-   - **API error shape:** `{ code, message, details? }` consistent across all endpoints
-   - **TanStack Form integration:** field-level validation, no schema validators (use custom onSubmit)
-   - **Query invalidation:** after mutations, invalidate all queries with affected key (e.g., `patientKeys.all`)
-   - **URL search state:** router owns search params, derived from validated schemas
+Phases 1–9 are implemented on `implement-phases-3-9`. Next work is review and merge, not a new phase.
 
-2. **File locations are stable** — no need to move anything
-3. **Test files use isolated test DB** helper from `apps/api/src/test/database.ts`
-4. **Cursor limits:** default 20, max 50
-5. **Timestamps:** ISO 8601 UTC strings (`new Date().toISOString()`)
-6. **IDs:** use crypto.randomUUID()
+Stable patterns to keep:
+
+- **Cursor format:** base64-encoded JSON with search context to prevent cursor misuse across different searches
+- **Contact field normalization:** blank strings → undefined → null in DB to avoid empty values
+- **DOB validation:** ISO 8601 calendar date, not in future
+- **API error shape:** `{ code, message, details? }` consistent across all endpoints
+- **TanStack Form integration:** field-level validation, no schema validators (use custom onSubmit)
+- **Query invalidation:** after mutations, invalidate all queries with affected key (e.g., `patientKeys.all`)
+- **URL search state:** router owns search params, derived from validated schemas
+- Isolated API tests use `apps/api/src/test/database.ts`
+- Cursor limits: default 20, max 50
+- Timestamps are ISO 8601 UTC strings; IDs are `crypto.randomUUID()`
 
 ## Commit Strategy (Per Original Plan)
 
@@ -262,7 +251,7 @@ bun run lint:no-use-effect # Verify no useEffect in React code
 
 **Commit message format:**
 
-```
+```text
 feat(phase-X): descriptive title
 
 - List key changes
@@ -274,25 +263,14 @@ feat(phase-X): descriptive title
 ## Git Status
 
 Current branch: `implement-phases-3-9`
-Uncommitted work: Only `PROGRESS.md` and `packages/contracts/src/patients.test.ts` exist; no implementation yet.
-
-When resuming Phase 4:
-
-```bash
-git status                 # Verify clean state (should be clean from Phase 3 commit)
-bun dev                    # Ensure db/api/web start cleanly
-bun test packages/contracts # Verify existing tests still pass
-bun run check              # Verify Phase 3 is stable
-# Start with plans/04-lab-tests.md acceptance criteria
-# Write contract tests first, implement schemas, then API, then UI
-```
+Implementation of Phases 3–9 is committed. Remaining work is review, address feedback, and merge.
 
 ## Quality Checklist Before Marking Phase Complete
 
 ### Phase 3 ✅
 
 - [x] All acceptance criteria from plan tested (automated or manual)
-- [x] `bun run check` passes (format, lint, typecheck, test, build)
+- [x] `bun run check` passes (typecheck, lint, test, build); format via `bun run format:check`
 - [x] No `useEffect` in React source (`bun run lint:no-use-effect` clean)
 - [x] All async UI states represented (loading, error, empty, success)
 - [x] All error paths have useful feedback
@@ -304,7 +282,7 @@ bun run check              # Verify Phase 3 is stable
 ### Phase 4 ✅
 
 - [x] All acceptance criteria from plan tested (automated or manual)
-- [x] `bun run check` passes (format, lint, typecheck, test, build)
+- [x] `bun run check` passes (typecheck, lint, test, build); format via `bun run format:check`
 - [x] No `useEffect` in React source (`bun run lint:no-use-effect` clean)
 - [x] All async UI states represented (loading, error, empty, success)
 - [x] All error paths have useful feedback

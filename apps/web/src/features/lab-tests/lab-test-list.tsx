@@ -56,6 +56,7 @@ export function LabTestListPage() {
             Search lab tests
           </label>
           <Input
+            key={search ?? ""}
             id="lab-test-search"
             name="search"
             defaultValue={search ?? ""}

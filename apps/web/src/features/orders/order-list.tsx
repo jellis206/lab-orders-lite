@@ -60,6 +60,7 @@ export function OrderListPage() {
             Search orders by patient
           </label>
           <Input
+            key={search ?? ""}
             id="order-search"
             name="search"
             defaultValue={search ?? ""}

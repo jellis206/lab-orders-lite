@@ -93,6 +93,48 @@ describe("patient reads", () => {
     ]);
   });
 
+  test("matches and pages non-ASCII names with the same folding as SQLite", async () => {
+    const now = "2025-01-01T00:00:00.000Z";
+    await database.db.insert(patients).values([
+      {
+        id: "p-4",
+        firstName: "Ann",
+        lastName: "Øster",
+        dateOfBirth: "1984-04-04",
+        email: "ann@example.test",
+        phone: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+      {
+        id: "p-5",
+        firstName: "Bob",
+        lastName: "Øster",
+        dateOfBirth: "1985-05-05",
+        email: "bob@example.test",
+        phone: null,
+        createdAt: now,
+        updatedAt: now,
+      },
+    ]);
+
+    const search = await json("/api/patients?search=%C3%98STER");
+    expect(patientListResponseSchema.parse(search.body).items.map((item) => item.id)).toEqual([
+      "p-4",
+      "p-5",
+    ]);
+
+    const first = await json("/api/patients?search=%C3%98STER&limit=1");
+    const firstBody = patientListResponseSchema.parse(first.body);
+    expect(firstBody.items.map((item) => item.id)).toEqual(["p-4"]);
+    const second = await json(
+      `/api/patients?search=%C3%98STER&limit=1&after=${encodeURIComponent(requireCursor(firstBody.nextCursor))}`,
+    );
+    expect(patientListResponseSchema.parse(second.body).items.map((item) => item.id)).toEqual([
+      "p-5",
+    ]);
+  });
+
   test("rejects malformed and search-mismatched cursors", async () => {
     expect((await json("/api/patients?after=bad-cursor")).response.status).toBe(400);
     const first = await json("/api/patients?search=able&limit=1");

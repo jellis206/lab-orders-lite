@@ -42,6 +42,7 @@ export function PatientListPage() {
           Search patients
         </label>
         <Input
+          key={search ?? ""}
           id="patient-search"
           name="search"
           defaultValue={search ?? ""}

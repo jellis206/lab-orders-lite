@@ -11,6 +11,8 @@ import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { labTests } from "../db/schema";
 import { apiError, readRequestJson, toApiErrorIssues } from "../http";
+import { decodeCursor, encodeCursor, foldSearchText } from "../pagination";
+import { isUniqueCodeError } from "./unique-code-error";
 
 const cursorSchema = z.object({
   search: z.string(),
@@ -18,22 +20,6 @@ const cursorSchema = z.object({
   code: z.string(),
   id: z.string(),
 });
-
-type Cursor = z.infer<typeof cursorSchema>;
-
-function encodeCursor(cursor: Cursor) {
-  const bytes = new TextEncoder().encode(JSON.stringify(cursor));
-  return btoa(String.fromCharCode(...bytes));
-}
-
-function decodeCursor(value: string): Cursor | undefined {
-  try {
-    const bytes = Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
-    return cursorSchema.parse(JSON.parse(new TextDecoder().decode(bytes)));
-  } catch {
-    return undefined;
-  }
-}
 
 function toResponse(row: typeof labTests.$inferSelect): LabTestResponse {
   return {
@@ -46,21 +32,6 @@ function toResponse(row: typeof labTests.$inferSelect): LabTestResponse {
     createdAt: row.createdAt,
     updatedAt: row.updatedAt,
   };
-}
-
-function isUniqueCodeError(cause: unknown) {
-  let current = cause;
-  while (current) {
-    const message = current instanceof Error ? current.message : String(current);
-    if (
-      /UNIQUE constraint failed: lab_tests\.code/i.test(message) ||
-      /lab_tests_code_unique/i.test(message)
-    ) {
-      return true;
-    }
-    current = current instanceof Error ? current.cause : undefined;
-  }
-  return false;
 }
 
 export function createLabTestRoutes(db: AppDatabase) {
@@ -79,10 +50,10 @@ export function createLabTestRoutes(db: AppDatabase) {
       );
     }
 
-    const search = parsed.data.search?.toLocaleLowerCase() ?? "";
+    const search = foldSearchText(parsed.data.search ?? "");
     const activeFilter =
       parsed.data.active === undefined ? "" : parsed.data.active ? "true" : "false";
-    const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
+    const cursor = parsed.data.after ? decodeCursor(parsed.data.after, cursorSchema) : undefined;
     if (
       parsed.data.after &&
       (!cursor || cursor.search !== search || cursor.active !== activeFilter)

@@ -32,6 +32,12 @@ describe("parseDollarInput", () => {
   it("rejects a negative amount", () => {
     expect(parseDollarInput("-1.00").ok).toBe(false);
   });
+
+  it("rejects dollar values that overflow the safe cent range", () => {
+    const result = parseDollarInput("900719925474099.99");
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.message).toBe("Enter a smaller dollar amount");
+  });
 });
 
 describe("centsToDollarInput", () => {

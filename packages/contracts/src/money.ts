@@ -12,6 +12,9 @@ export function parseDollarInput(value: string): ParseDollarResult {
   const whole = (match[1] ?? "").replaceAll(",", "");
   const fraction = (match[2] ?? "").padEnd(2, "0");
   const cents = Number.parseInt(whole, 10) * 100 + Number.parseInt(fraction, 10);
+  if (!Number.isSafeInteger(cents)) {
+    return { ok: false, message: "Enter a smaller dollar amount" };
+  }
   return { ok: true, cents };
 }
 

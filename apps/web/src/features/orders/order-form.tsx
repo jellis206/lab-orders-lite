@@ -295,8 +295,17 @@ export function OrderForm() {
                         <span>
                           {test.code} · {test.name}
                         </span>
-                        <span className="text-app-muted">
-                          {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
+                        <span className="flex items-center gap-3">
+                          <span className="text-app-muted">
+                            {formatMoney(test.priceCents)} · {test.turnaroundHours} hours
+                          </span>
+                          <button
+                            type="button"
+                            className="font-semibold text-blue-700 hover:underline dark:text-blue-400"
+                            onClick={() => toggleTest(test)}
+                          >
+                            Remove {test.code}
+                          </button>
                         </span>
                       </li>
                     ))}

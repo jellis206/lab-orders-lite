@@ -18,10 +18,13 @@ const priceCentsSchema = z
   .int("Price must be a whole number of cents")
   .min(0, "Price cannot be negative");
 
+export const MAX_TURNAROUND_HOURS = 87_600;
+
 const turnaroundHoursSchema = z
   .number({ error: "Turnaround must be a whole number of hours" })
   .int("Turnaround must be a whole number of hours")
-  .min(1, "Turnaround must be at least 1 hour");
+  .min(1, "Turnaround must be at least 1 hour")
+  .max(MAX_TURNAROUND_HOURS, "Turnaround must be 87600 hours or fewer");
 
 export const createLabTestSchema = z
   .object({

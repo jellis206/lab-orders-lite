@@ -12,7 +12,13 @@ import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { orderTests, orders, patients } from "../db/schema";
 import { apiError, readRequestJson, toApiErrorIssues } from "../http";
-import { assertStatusTransition, createOrderRecord, OrderServiceError } from "./order.service";
+import { decodeCursor, encodeCursor, foldSearchText } from "../pagination";
+import {
+  createOrderRecord,
+  loadOrderDetail,
+  OrderServiceError,
+  transitionOrderStatus,
+} from "./order.service";
 
 const cursorSchema = z.object({
   search: z.string(),
@@ -20,22 +26,6 @@ const cursorSchema = z.object({
   orderedAt: z.string(),
   id: z.string(),
 });
-
-type Cursor = z.infer<typeof cursorSchema>;
-
-function encodeCursor(cursor: Cursor) {
-  const bytes = new TextEncoder().encode(JSON.stringify(cursor));
-  return btoa(String.fromCharCode(...bytes));
-}
-
-function decodeCursor(value: string): Cursor | undefined {
-  try {
-    const bytes = Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
-    return cursorSchema.parse(JSON.parse(new TextDecoder().decode(bytes)));
-  } catch {
-    return undefined;
-  }
-}
 
 function serviceError(cause: OrderServiceError) {
   return apiError(cause.code, cause.message);
@@ -85,9 +75,9 @@ export function createOrderRoutes(db: AppDatabase) {
       );
     }
 
-    const search = parsed.data.search?.toLocaleLowerCase() ?? "";
+    const search = foldSearchText(parsed.data.search ?? "");
     const status = parsed.data.status ?? "";
-    const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
+    const cursor = parsed.data.after ? decodeCursor(parsed.data.after, cursorSchema) : undefined;
     if (parsed.data.after && (!cursor || cursor.search !== search || cursor.status !== status)) {
       return context.json(apiError("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
     }
@@ -150,42 +140,9 @@ export function createOrderRoutes(db: AppDatabase) {
   });
 
   app.get("/:id", async (context) => {
-    const row = await db
-      .select({
-        id: orders.id,
-        patientId: orders.patientId,
-        patientFirstName: patients.firstName,
-        patientLastName: patients.lastName,
-        status: orders.status,
-        orderedAt: orders.orderedAt,
-        totalCents: orders.totalCents,
-        estimatedReadyAt: orders.estimatedReadyAt,
-        createdAt: orders.createdAt,
-        updatedAt: orders.updatedAt,
-      })
-      .from(orders)
-      .innerJoin(patients, eq(orders.patientId, patients.id))
-      .where(eq(orders.id, context.req.param("id")))
-      .get();
-    if (!row) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
-
-    const tests = await db
-      .select({
-        labTestId: orderTests.labTestId,
-        testCode: orderTests.testCode,
-        testName: orderTests.testName,
-        priceCents: orderTests.priceCents,
-        turnaroundHours: orderTests.turnaroundHours,
-      })
-      .from(orderTests)
-      .where(eq(orderTests.orderId, row.id));
-
-    const response: OrderDetailResponse = {
-      ...row,
-      testCount: tests.length,
-      tests,
-    };
-    return context.json(response);
+    const detail = await loadOrderDetail(db, context.req.param("id"));
+    if (!detail) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
+    return context.json(detail);
   });
 
   app.post("/", async (context) => {
@@ -250,7 +207,7 @@ export function createOrderRoutes(db: AppDatabase) {
     if (!existing) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
 
     try {
-      assertStatusTransition(existing.status, parsed.data.status);
+      await transitionOrderStatus(db, existing.id, existing.status, parsed.data.status);
     } catch (cause) {
       if (cause instanceof OrderServiceError) {
         return context.json(serviceError(cause), cause.status);
@@ -258,45 +215,9 @@ export function createOrderRoutes(db: AppDatabase) {
       throw cause;
     }
 
-    const updatedAt = new Date().toISOString();
-    await db
-      .update(orders)
-      .set({ status: parsed.data.status, updatedAt })
-      .where(eq(orders.id, existing.id));
-
-    const detail = await db
-      .select({
-        id: orders.id,
-        patientId: orders.patientId,
-        patientFirstName: patients.firstName,
-        patientLastName: patients.lastName,
-        status: orders.status,
-        orderedAt: orders.orderedAt,
-        totalCents: orders.totalCents,
-        estimatedReadyAt: orders.estimatedReadyAt,
-        createdAt: orders.createdAt,
-        updatedAt: orders.updatedAt,
-      })
-      .from(orders)
-      .innerJoin(patients, eq(orders.patientId, patients.id))
-      .where(eq(orders.id, existing.id))
-      .get();
-    const tests = await db
-      .select({
-        labTestId: orderTests.labTestId,
-        testCode: orderTests.testCode,
-        testName: orderTests.testName,
-        priceCents: orderTests.priceCents,
-        turnaroundHours: orderTests.turnaroundHours,
-      })
-      .from(orderTests)
-      .where(eq(orderTests.orderId, existing.id));
-
-    return context.json({
-      ...detail!,
-      testCount: tests.length,
-      tests,
-    } satisfies OrderDetailResponse);
+    const detail = await loadOrderDetail(db, existing.id);
+    if (!detail) return context.json(apiError("ORDER_NOT_FOUND", "Order not found"), 404);
+    return context.json(detail);
   });
 
   return app;

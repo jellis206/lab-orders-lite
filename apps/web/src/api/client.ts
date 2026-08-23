@@ -16,7 +16,18 @@ export async function apiRequest<T>(
   init?: RequestInit,
 ): Promise<T> {
   const response = await fetch(path, init);
-  const body: unknown = await response.json();
+  let body: unknown;
+  try {
+    body = await response.json();
+  } catch (cause) {
+    if (!response.ok) {
+      throw new ApiRequestError(response.status, {
+        code: "UNEXPECTED_RESPONSE",
+        message: "The server returned an unexpected error",
+      });
+    }
+    throw cause;
+  }
   if (!response.ok) {
     const parsed = apiErrorSchema.safeParse(body);
     throw new ApiRequestError(

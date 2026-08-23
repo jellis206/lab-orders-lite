@@ -87,6 +87,23 @@ describe("lab test reads", () => {
     expect(labTestListResponseSchema.parse(byName.body).items[0]?.id).toBe("t-cmp");
   });
 
+  test("matches non-ASCII catalog names with the same folding as SQLite", async () => {
+    await database.db.insert(labTests).values({
+      id: "t-eluate",
+      code: "ELU",
+      name: "Élution Panel",
+      priceCents: 1200,
+      turnaroundHours: 6,
+      active: true,
+      createdAt: now,
+      updatedAt: now,
+    });
+    const result = await json("/api/tests?search=%C3%89LUTION");
+    expect(labTestListResponseSchema.parse(result.body).items.map((item) => item.id)).toEqual([
+      "t-eluate",
+    ]);
+  });
+
   test("filters by active status before pagination", async () => {
     const active = await json("/api/tests?active=true");
     expect(labTestListResponseSchema.parse(active.body).items.map((item) => item.id)).toEqual([

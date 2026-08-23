@@ -11,6 +11,7 @@ import { z } from "zod";
 import type { AppDatabase } from "../db/client";
 import { patients } from "../db/schema";
 import { apiError, readRequestJson, toApiErrorIssues } from "../http";
+import { decodeCursor, encodeCursor, foldSearchText } from "../pagination";
 
 const cursorSchema = z.object({
   search: z.string(),
@@ -18,22 +19,6 @@ const cursorSchema = z.object({
   firstName: z.string(),
   id: z.string(),
 });
-
-type Cursor = z.infer<typeof cursorSchema>;
-
-function encodeCursor(cursor: Cursor) {
-  const bytes = new TextEncoder().encode(JSON.stringify(cursor));
-  return btoa(String.fromCharCode(...bytes));
-}
-
-function decodeCursor(value: string): Cursor | undefined {
-  try {
-    const bytes = Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
-    return cursorSchema.parse(JSON.parse(new TextDecoder().decode(bytes)));
-  } catch {
-    return undefined;
-  }
-}
 
 function toResponse(row: typeof patients.$inferSelect): PatientResponse {
   return {
@@ -55,13 +40,17 @@ export function createPatientRoutes(db: AppDatabase) {
     const parsed = patientListQuerySchema.safeParse(context.req.query());
     if (!parsed.success) {
       return context.json(
-        apiError("VALIDATION_ERROR", "Query validation failed", toApiErrorIssues(parsed.error.issues)),
+        apiError(
+          "VALIDATION_ERROR",
+          "Query validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         400,
       );
     }
 
-    const search = parsed.data.search?.toLocaleLowerCase() ?? "";
-    const cursor = parsed.data.after ? decodeCursor(parsed.data.after) : undefined;
+    const search = foldSearchText(parsed.data.search ?? "");
+    const cursor = parsed.data.after ? decodeCursor(parsed.data.after, cursorSchema) : undefined;
     if (parsed.data.after && (!cursor || cursor.search !== search)) {
       return context.json(apiError("INVALID_CURSOR", "Cursor is invalid for this search"), 400);
     }
@@ -102,8 +91,8 @@ export function createPatientRoutes(db: AppDatabase) {
         hasMore && last
           ? encodeCursor({
               search,
-              lastName: last.lastName.toLocaleLowerCase(),
-              firstName: last.firstName.toLocaleLowerCase(),
+              lastName: foldSearchText(last.lastName),
+              firstName: foldSearchText(last.firstName),
               id: last.id,
             })
           : null,
@@ -125,7 +114,11 @@ export function createPatientRoutes(db: AppDatabase) {
     const parsed = createPatientSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        apiError("VALIDATION_ERROR", "Request validation failed", toApiErrorIssues(parsed.error.issues)),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }
@@ -152,7 +145,11 @@ export function createPatientRoutes(db: AppDatabase) {
     const parsed = patchPatientSchema.safeParse(body.data);
     if (!parsed.success) {
       return context.json(
-        apiError("VALIDATION_ERROR", "Request validation failed", toApiErrorIssues(parsed.error.issues)),
+        apiError(
+          "VALIDATION_ERROR",
+          "Request validation failed",
+          toApiErrorIssues(parsed.error.issues),
+        ),
         422,
       );
     }

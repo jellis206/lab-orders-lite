@@ -74,6 +74,18 @@ describe("createLabTestSchema", () => {
     );
   });
 
+  it("accepts the catalog maximum turnaround", () => {
+    const result = createLabTestSchema.safeParse({ ...validCreate, turnaroundHours: 87_600 });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.turnaroundHours).toBe(87_600);
+  });
+
+  it("rejects a turnaround above the catalog maximum", () => {
+    expect(createLabTestSchema.safeParse({ ...validCreate, turnaroundHours: 87_601 }).success).toBe(
+      false,
+    );
+  });
+
   it("rejects missing required fields", () => {
     expect(createLabTestSchema.safeParse({ code: "CBC" }).success).toBe(false);
   });

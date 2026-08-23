@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm";
 import { createApp } from "../app";
 import { labTests, orders, patients } from "../db/schema";
 import { createTestDatabase } from "../test/database";
-import { persistOrderRows } from "./order.service";
+import { persistOrderRows, transitionOrderStatus } from "./order.service";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
 let app: ReturnType<typeof createApp>;
@@ -294,6 +294,45 @@ describe("order reads", () => {
     ]);
   });
 
+  test("matches non-ASCII patient names with the same folding as SQLite", async () => {
+    await database.db.insert(patients).values({
+      id: "patient-oster",
+      firstName: "Ann",
+      lastName: "Øster",
+      dateOfBirth: "1984-04-04",
+      email: "ann@example.test",
+      phone: null,
+      createdAt: now,
+      updatedAt: now,
+    });
+    await persistOrderRows(
+      database.db,
+      {
+        id: "order-oster",
+        patientId: "patient-oster",
+        status: "pending",
+        orderedAt: "2025-01-13T10:00:00.000Z",
+        totalCents: 3000,
+        estimatedReadyAt: "2025-01-13T22:00:00.000Z",
+        createdAt: now,
+        updatedAt: now,
+      },
+      [
+        {
+          labTestId: "test-cbc",
+          testCode: "CBC",
+          testName: "Complete Blood Count",
+          priceCents: 3000,
+          turnaroundHours: 12,
+        },
+      ],
+    );
+    const result = await json("/api/orders?search=%C3%98STER");
+    expect(orderListResponseSchema.parse(result.body).items.map((item) => item.id)).toEqual([
+      "order-oster",
+    ]);
+  });
+
   test("rejects malformed and filter-mismatched cursors", async () => {
     await seedOrders();
     expect((await json("/api/orders?after=bad")).response.status).toBe(400);
@@ -373,5 +412,23 @@ describe("order status", () => {
       body: JSON.stringify({ status: "cancelled" }),
     });
     expect(afterComplete.response.status).toBe(409);
+  });
+
+  test("rejects a status update when another request already changed it", async () => {
+    const created = await json("/api/orders", createBody({ testIds: ["test-cbc"] }));
+    const createdBody = orderDetailResponseSchema.parse(created.body);
+    await transitionOrderStatus(database.db, createdBody.id, "pending", "in_progress");
+
+    await expect(
+      transitionOrderStatus(database.db, createdBody.id, "pending", "cancelled"),
+    ).rejects.toMatchObject({
+      code: "STATUS_CONFLICT",
+      status: 409,
+    });
+
+    const detail = orderDetailResponseSchema.parse(
+      (await json(`/api/orders/${createdBody.id}`)).body,
+    );
+    expect(detail.status).toBe("in_progress");
   });
 });

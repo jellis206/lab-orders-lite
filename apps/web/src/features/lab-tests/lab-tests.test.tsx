@@ -31,7 +31,9 @@ function mockFetch(handler?: (url: string, init?: RequestInit) => Response | Pro
     if (url === "/api/health") {
       return Response.json({ status: "ok", service: "lab-orders-api" });
     }
-    return handler?.(url, init) ?? Response.json({ items: tests, nextCursor: null, hasMore: false });
+    return (
+      handler?.(url, init) ?? Response.json({ items: tests, nextCursor: null, hasMore: false })
+    );
   });
 }
 
@@ -112,6 +114,18 @@ test("shows useful inline errors without submitting invalid data", async () => {
   fireEvent.click(await screen.findByRole("button", { name: "Create lab test" }));
   expect(await screen.findByText("Code is required")).toBeTruthy();
   expect(screen.getByText("Name is required")).toBeTruthy();
+  expect(requests.filter(({ url }) => url === "/api/tests")).toHaveLength(0);
+});
+
+test("rejects a partially numeric turnaround value", async () => {
+  mockFetch();
+  renderApp("/tests/new");
+  fireEvent.change(await screen.findByLabelText("Code"), { target: { value: "CBC" } });
+  fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Complete Blood Count" } });
+  fireEvent.change(screen.getByLabelText("Price"), { target: { value: "30" } });
+  fireEvent.change(screen.getByLabelText("Turnaround hours"), { target: { value: "24hours" } });
+  fireEvent.click(screen.getByRole("button", { name: "Create lab test" }));
+  expect(await screen.findByText("Turnaround must be a whole number of hours")).toBeTruthy();
   expect(requests.filter(({ url }) => url === "/api/tests")).toHaveLength(0);
 });
 

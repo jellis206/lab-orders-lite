@@ -128,6 +128,9 @@ test("keeps a selected test visible after the catalog search changes", async () 
   await waitFor(() => expect(screen.queryByRole("checkbox", { name: /CBC/ })).toBeNull());
   expect(screen.getByRole("heading", { name: "Selected tests" })).toBeTruthy();
   expect(screen.getByText("CBC · Complete Blood Count")).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Remove CBC" }));
+  expect(screen.queryByRole("heading", { name: "Selected tests" })).toBeNull();
+  expect(screen.queryByText("CBC · Complete Blood Count")).toBeNull();
 });
 
 test("does not submit an empty selection", async () => {
@@ -248,6 +251,9 @@ test("lists orders and puts patient and status filters in the URL", async () => 
       ),
     ).toBe(true),
   );
+  fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+  await waitFor(() => expect(router.state.location.search).toEqual({}));
+  expect(screen.getByLabelText("Search orders by patient")).toHaveProperty("value", "");
 });
 
 test("distinguishes an empty catalog from empty filtered results", async () => {
