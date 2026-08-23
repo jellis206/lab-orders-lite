@@ -19,13 +19,38 @@ describe("createPatientSchema", () => {
     expect(result.success).toBe(true);
   });
 
-  it("accepts a patient with no contact fields", () => {
+  it("accepts a patient with only an email", () => {
+    const result = createPatientSchema.safeParse({
+      firstName: "Jane",
+      lastName: "Doe",
+      dateOfBirth: "1990-05-15",
+      email: "jane@example.com",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("accepts a patient with only a phone number", () => {
+    const result = createPatientSchema.safeParse({
+      firstName: "Jane",
+      lastName: "Doe",
+      dateOfBirth: "1990-05-15",
+      phone: "555-1234",
+    });
+    expect(result.success).toBe(true);
+  });
+
+  it("rejects a patient with no contact fields", () => {
     const result = createPatientSchema.safeParse({
       firstName: "Jane",
       lastName: "Doe",
       dateOfBirth: "1990-05-15",
     });
-    expect(result.success).toBe(true);
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.message.includes("email or phone"))).toBe(
+        true,
+      );
+    }
   });
 
   it("rejects blank first name", () => {
@@ -115,6 +140,14 @@ describe("patchPatientSchema", () => {
   it("rejects blank first name", () => {
     const result = patchPatientSchema.safeParse({
       firstName: "   ",
+    });
+    expect(result.success).toBe(false);
+  });
+
+  it("rejects clearing both contact fields", () => {
+    const result = patchPatientSchema.safeParse({
+      email: "",
+      phone: "",
     });
     expect(result.success).toBe(false);
   });

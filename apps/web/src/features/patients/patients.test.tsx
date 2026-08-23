@@ -74,6 +74,7 @@ test("creates a patient and navigates to its editable detail", async () => {
   fireEvent.change(await screen.findByLabelText("First name"), { target: { value: "Jane" } });
   fireEvent.change(screen.getByLabelText("Last name"), { target: { value: "Doe" } });
   fireEvent.change(screen.getByLabelText("Date of birth"), { target: { value: "1990-05-15" } });
+  fireEvent.change(screen.getByLabelText("Email"), { target: { value: "jane@example.com" } });
   fireEvent.click(screen.getByRole("button", { name: "Create patient" }));
   await waitFor(() => expect(router.state.location.pathname).toBe("/patients/p-1"));
   expect(await screen.findByDisplayValue("Jane")).toBeTruthy();
@@ -84,5 +85,8 @@ test("shows useful inline errors without submitting invalid data", async () => {
   renderApp("/patients/new");
   fireEvent.click(await screen.findByRole("button", { name: "Create patient" }));
   expect(await screen.findAllByText("Name is required")).toHaveLength(2);
+  expect(
+    screen.getAllByText("Provide an email or phone number so we can share results").length,
+  ).toBeGreaterThan(0);
   expect(requests.filter((url) => url === "/api/patients")).toHaveLength(0);
 });

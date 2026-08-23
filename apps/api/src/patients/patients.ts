@@ -178,6 +178,15 @@ export function createPatientRoutes(db: AppDatabase) {
       ...(Object.hasOwn(parsed.data, "phone") ? { phone: parsed.data.phone ?? null } : {}),
       updatedAt: new Date().toISOString(),
     };
+    const next = { ...existing, ...changes };
+    if (!next.email && !next.phone) {
+      return context.json(
+        error("VALIDATION_ERROR", "Request validation failed", [
+          { path: ["email"], message: "Provide an email or phone number so we can share results" },
+        ]),
+        422,
+      );
+    }
     await db.update(patients).set(changes).where(eq(patients.id, existing.id));
     return context.json(toResponse({ ...existing, ...changes }));
   });

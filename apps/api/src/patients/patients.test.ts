@@ -122,15 +122,35 @@ describe("patient writes", () => {
     const updated = await json("/api/patients/p-1", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ firstName: " Zoey ", phone: "" }),
+      body: JSON.stringify({ firstName: " Zoey " }),
     });
     expect(updated.response.status).toBe(200);
     expect(updated.body).toMatchObject({
       id: "p-1",
       firstName: "Zoey",
       lastName: "Able",
-      phone: null,
+      phone: "555-0101",
     });
+  });
+
+  test("rejects creating or updating a patient without any contact method", async () => {
+    const created = await json("/api/patients", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        firstName: "Jane",
+        lastName: "Doe",
+        dateOfBirth: "1990-05-15",
+      }),
+    });
+    expect(created.response.status).toBe(422);
+
+    const cleared = await json("/api/patients/p-1", {
+      method: "PATCH",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ phone: "" }),
+    });
+    expect(cleared.response.status).toBe(422);
   });
 
   test("returns validation errors and does not write invalid input", async () => {

@@ -80,8 +80,8 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
             ["firstName", "First name", "text", "given-name"],
             ["lastName", "Last name", "text", "family-name"],
             ["dateOfBirth", "Date of birth", "date", "bday"],
-            ["email", "Email (optional)", "email", "email"],
-            ["phone", "Phone (optional)", "tel", "tel"],
+            ["email", "Email", "email", "email"],
+            ["phone", "Phone", "tel", "tel"],
           ] as const
         ).map(([name, label, type, autocomplete]) => (
           <form.Field key={name} name={name}>
@@ -118,6 +118,9 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
           </form.Field>
         ))}
       </div>
+      <p className="mt-3 text-sm text-app-muted">
+        Provide at least an email or phone number so results can be shared when an order is ready.
+      </p>
       <div className="mt-7 flex gap-3">
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? "Saving…" : patient ? "Save changes" : "Create patient"}

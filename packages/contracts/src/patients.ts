@@ -39,17 +39,35 @@ function optionalContact<T extends z.ZodType<string>>(schema: T) {
   }, schema.optional());
 }
 
-export const createPatientSchema = z
-  .object({
-    firstName: requiredNameSchema,
-    lastName: requiredNameSchema,
-    dateOfBirth: calendarDateSchema,
-    email: optionalContact(emailSchema),
-    phone: optionalContact(phoneSchema),
-  })
-  .strict();
+const contactRequiredMessage = "Provide an email or phone number so we can share results";
 
-export const patchPatientSchema = createPatientSchema.partial();
+function requireContactMethod(value: { email?: string; phone?: string }, context: z.RefinementCtx) {
+  if (value.email || value.phone) return;
+  context.addIssue({ code: "custom", path: ["email"], message: contactRequiredMessage });
+  context.addIssue({ code: "custom", path: ["phone"], message: contactRequiredMessage });
+}
+
+const patientFields = {
+  firstName: requiredNameSchema,
+  lastName: requiredNameSchema,
+  dateOfBirth: calendarDateSchema,
+  email: optionalContact(emailSchema),
+  phone: optionalContact(phoneSchema),
+};
+
+export const createPatientSchema = z
+  .object(patientFields)
+  .strict()
+  .superRefine(requireContactMethod);
+
+export const patchPatientSchema = z
+  .object(patientFields)
+  .partial()
+  .strict()
+  .superRefine((value, context) => {
+    if (!Object.hasOwn(value, "email") || !Object.hasOwn(value, "phone")) return;
+    requireContactMethod(value, context);
+  });
 
 export const patientResponseSchema = z
   .object({

@@ -7,6 +7,7 @@ test("create a patient and a multi-test order, then verify detail and list", asy
   await page.getByLabel("First name").fill("Nova");
   await page.getByLabel("Last name").fill(lastName);
   await page.getByLabel("Date of birth").fill("1991-06-15");
+  await page.getByLabel("Email").fill(`nova.${lastName.toLowerCase()}@example.test`);
   await page.getByRole("button", { name: "Create patient" }).click();
   await expect(page.getByText("Patient saved successfully.")).toBeVisible();
 
