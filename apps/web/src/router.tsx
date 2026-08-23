@@ -11,7 +11,7 @@ import { AppShell } from "./app-shell";
 import { Button } from "./components/button";
 import { LabTestListPage } from "./features/lab-tests/lab-test-list";
 import { EditLabTestPage, NewLabTestPage } from "./features/lab-tests/lab-test-pages";
-import { OrderHomePage } from "./features/orders/order-home";
+import { OrderListPage } from "./features/orders/order-list";
 import { NewOrderPage, OrderDetailPage } from "./features/orders/order-pages";
 import { PatientListPage } from "./features/patients/patient-list";
 import { EditPatientPage, NewPatientPage } from "./features/patients/patient-pages";
@@ -114,7 +114,11 @@ const editTestRoute = createRoute({
 const ordersRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/orders",
-  component: OrderHomePage,
+  validateSearch: z.object({
+    search: z.string().optional(),
+    status: z.enum(["pending", "in_progress", "completed", "cancelled"]).optional(),
+  }),
+  component: OrderListPage,
 });
 
 const newOrderRoute = createRoute({

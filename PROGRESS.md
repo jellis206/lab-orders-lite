@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 6 — Order creation UI (pending)
-- **Next:** Phase 7 — Order browsing
+- **Last Commit:** Phase 7 — Order browsing (pending)
+- **Next:** Phase 8 — Quality and polish
 
 ## Completed Work
 
@@ -106,9 +106,17 @@
 
 **Acceptance → tests:** `apps/web/src/features/orders/orders.test.tsx`
 
+### Phase 7 — Order Browsing and Details ✅
+
+**Completed:**
+
+- Newest-first orders table with URL-backed patient search and status filters
+- Load-more pagination and distinct empty/filtered-empty states
+- Historical detail snapshots plus valid status actions and cancel confirmation
+- API list/filter/cursor/status coverage from Phase 5 plus UI behavior tests
+
 ## Remaining Phases
 
-- **Phase 7** — Order browsing (filters, details, status updates)
 - **Phase 8** — Quality/polish (E2E Playwright, accessibility, responsive, state handling)
 - **Phase 9** — Documentation (README, setup validation, AI disclosure)
 

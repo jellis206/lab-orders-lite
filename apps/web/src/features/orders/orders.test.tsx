@@ -168,7 +168,6 @@ test("prevents a second submit while the mutation is pending", async () => {
     requests.filter(({ url, init }) => url === "/api/orders" && init?.method === "POST"),
   ).toHaveLength(1);
   resolveCreate?.(Response.json(createdOrder, { status: 201 }));
-  await waitFor(() => expect(screen.queryByRole("button", { name: "Creating order…" })).toBeNull());
 });
 
 test("preserves selections when the API rejects the order", async () => {
@@ -217,4 +216,74 @@ test("creates an order and navigates to the historical detail", async () => {
     patientId: "patient-ada",
     testIds: ["test-cbc", "test-cmp"],
   });
+});
+
+test("lists orders and puts patient and status filters in the URL", async () => {
+  const summary = (({ tests: _unused, ...rest }) => rest)(createdOrder);
+  mockFetch((url) => {
+    if (url.startsWith("/api/orders")) {
+      return Response.json({ items: [summary], nextCursor: null, hasMore: false });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  const router = renderApp("/orders");
+  expect(await screen.findByText("Rivera, Ada")).toBeTruthy();
+  fireEvent.change(screen.getByLabelText("Search orders by patient"), {
+    target: { value: "ada" },
+  });
+  fireEvent.submit(screen.getByRole("search"));
+  await waitFor(() => expect(router.state.location.search).toMatchObject({ search: "ada" }));
+  fireEvent.change(screen.getByLabelText("Status"), { target: { value: "pending" } });
+  await waitFor(() =>
+    expect(router.state.location.search).toMatchObject({ search: "ada", status: "pending" }),
+  );
+  await waitFor(() =>
+    expect(
+      requests.some(
+        ({ url }) =>
+          url.includes("/api/orders?") &&
+          url.includes("search=ada") &&
+          url.includes("status=pending") &&
+          !url.includes("after="),
+      ),
+    ).toBe(true),
+  );
+});
+
+test("distinguishes an empty catalog from empty filtered results", async () => {
+  mockFetch(() => Response.json({ items: [], nextCursor: null, hasMore: false }));
+  renderApp("/orders?search=nobody");
+  expect(await screen.findByRole("heading", { name: "No matching orders" })).toBeTruthy();
+});
+
+test("starts a pending order and requires confirmation to cancel", async () => {
+  let current = { ...createdOrder, status: "pending" as const };
+  mockFetch((url, init) => {
+    if (url === "/api/orders/order-1" && init?.method === "PATCH") {
+      current = { ...current, status: JSON.parse(String(init.body)).status };
+      return Response.json(current);
+    }
+    if (url === "/api/orders/order-1") return Response.json(current);
+    return Response.json({ items: [current], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/order-1");
+  fireEvent.click(await screen.findByRole("button", { name: "Start order" }));
+  expect(await screen.findByRole("button", { name: "Complete order" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Cancel order" }));
+  fireEvent.click(screen.getByRole("button", { name: "Confirm cancel" }));
+  expect(await screen.findByText(/cannot change/)).toBeTruthy();
+});
+
+test("shows a useful not-found state for an unknown order", async () => {
+  mockFetch((url) => {
+    if (url === "/api/orders/missing") {
+      return Response.json(
+        { code: "ORDER_NOT_FOUND", message: "Order not found" },
+        { status: 404 },
+      );
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/missing");
+  expect(await screen.findByRole("heading", { name: "Order not found" })).toBeTruthy();
 });

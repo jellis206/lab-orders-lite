@@ -5,6 +5,7 @@ import { ApiRequestError } from "../../api/client";
 import { orderDetailOptions } from "./api";
 import { formatDateTime, formatStatus } from "./format";
 import { OrderForm } from "./order-form";
+import { OrderStatusControls } from "./order-status-controls";
 
 export function NewOrderPage() {
   return (
@@ -56,6 +57,7 @@ export function OrderDetailPage() {
           Order for {order.patientLastName}, {order.patientFirstName}
         </h1>
         <p className="mt-2 text-sm capitalize text-zinc-600">{formatStatus(order.status)}</p>
+        <OrderStatusControls order={order} />
       </div>
       <dl className="mt-6 grid gap-4 rounded-xl border border-zinc-200 bg-white p-6 text-sm sm:grid-cols-3">
         <div>
