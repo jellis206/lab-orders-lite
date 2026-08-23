@@ -89,3 +89,22 @@ test("shows useful inline errors without submitting invalid data", async () => {
   ).toBeGreaterThan(0);
   expect(requests.filter((url) => url === "/api/patients")).toHaveLength(0);
 });
+
+test("cancel returns to the patient list from new and edit", async () => {
+  mockFetch((url) => {
+    if (url === "/api/patients/p-1") return Response.json(patients[0]);
+    return Response.json({ items: patients, nextCursor: null, hasMore: false });
+  });
+
+  const newRouter = renderApp("/patients/new");
+  fireEvent.change(await screen.findByLabelText("First name"), { target: { value: "Jane" } });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(newRouter.state.location.pathname).toBe("/patients"));
+
+  cleanup();
+  const editRouter = renderApp("/patients/p-1");
+  fireEvent.change(await screen.findByLabelText("First name"), { target: { value: "Janet" } });
+  fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+  await waitFor(() => expect(editRouter.state.location.pathname).toBe("/patients"));
+});
+

@@ -129,10 +129,6 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
           type="button"
           className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
           onClick={() => {
-            if (patient) {
-              void navigate({ to: "/patients/$patientId", params: { patientId: patient.id } });
-              return;
-            }
             void navigate({ to: "/patients" });
           }}
         >
