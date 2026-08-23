@@ -4,6 +4,7 @@ import {
   createRootRoute,
   createRoute,
   createRouter,
+  Link,
   type RouterHistory,
 } from "@tanstack/react-router";
 import { z } from "zod";
@@ -16,24 +17,46 @@ import { NewOrderPage, OrderDetailPage } from "./features/orders/order-pages";
 import { PatientListPage } from "./features/patients/patient-list";
 import { EditPatientPage, NewPatientPage } from "./features/patients/patient-pages";
 
-function Page({ title, description }: { title: string; description: string }) {
+function OverviewPage() {
+  const cards = [
+    {
+      to: "/patients" as const,
+      title: "Patients",
+      description: "Create records and keep contact details current.",
+    },
+    {
+      to: "/tests" as const,
+      title: "Lab tests",
+      description: "Maintain unique codes, exact prices, and turnaround hours.",
+    },
+    {
+      to: "/orders" as const,
+      title: "Orders",
+      description: "Order active tests and keep historical snapshots.",
+    },
+  ];
   return (
     <section>
-      <div className="flex flex-wrap items-end justify-between gap-4 border-b border-zinc-200 pb-5">
-        <div>
-          <p className="mb-1 text-sm font-medium text-blue-700">Lab Orders Lite</p>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">{title}</h1>
-          <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">{description}</p>
-        </div>
-        {title !== "Overview" && (
-          <Button type="button">
-            New {title === "Lab Tests" ? "test" : title.slice(0, -1).toLowerCase()}
-          </Button>
-        )}
+      <div className="border-b border-zinc-200 pb-5">
+        <p className="mb-1 text-sm font-medium text-blue-700">Lab Orders Lite</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-zinc-950">Overview</h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-zinc-600">
+          Manage patients, the lab test catalog, and orders from one focused workspace.
+        </p>
       </div>
-      <div className="mt-6 rounded-xl border border-dashed border-zinc-300 bg-white p-10 text-center text-sm text-zinc-500">
-        {title} workspace ready for its feature slice.
-      </div>
+      <ul className="mt-6 grid gap-4 sm:grid-cols-3">
+        {cards.map((card) => (
+          <li key={card.to}>
+            <Link
+              to={card.to}
+              className="block rounded-xl border border-zinc-200 bg-white p-5 hover:border-blue-200 hover:bg-blue-50/40 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-600"
+            >
+              <h2 className="font-semibold text-zinc-950">{card.title}</h2>
+              <p className="mt-2 text-sm text-zinc-600">{card.description}</p>
+            </Link>
+          </li>
+        ))}
+      </ul>
     </section>
   );
 }
@@ -60,12 +83,7 @@ const rootRoute = createRootRoute({
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/",
-  component: () => (
-    <Page
-      title="Overview"
-      description="Manage patients, the lab test catalog, and orders from one focused workspace."
-    />
-  ),
+  component: OverviewPage,
 });
 
 const patientsRoute = createRoute({

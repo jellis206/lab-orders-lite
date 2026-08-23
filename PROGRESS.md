@@ -19,8 +19,8 @@
 ## Current Status
 
 - **Branch:** `implement-phases-3-9`
-- **Last Commit:** Phase 7 — Order browsing (pending)
-- **Next:** Phase 8 — Quality and polish
+- **Last Commit:** Phase 8 — Quality and polish (pending)
+- **Next:** Phase 9 — Documentation
 
 ## Completed Work
 
@@ -115,9 +115,17 @@
 - Historical detail snapshots plus valid status actions and cancel confirmation
 - API list/filter/cursor/status coverage from Phase 5 plus UI behavior tests
 
+### Phase 8 — Quality and Polish ✅
+
+**Completed:**
+
+- Overview landing cards and consistent async/error/empty/success states
+- Query client skips retries on 4xx API errors
+- Isolated Playwright happy path: create patient → multi-test order → detail/list
+- `bun run e2e` / `bun run e2e:headed`; `bun run check` stays deterministic by excluding Playwright specs
+
 ## Remaining Phases
 
-- **Phase 8** — Quality/polish (E2E Playwright, accessibility, responsive, state handling)
 - **Phase 9** — Documentation (README, setup validation, AI disclosure)
 
 ## Key Architectural Decisions
