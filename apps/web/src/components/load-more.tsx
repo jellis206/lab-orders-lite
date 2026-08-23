@@ -4,10 +4,16 @@ export function LoadMore({
   hasNextPage,
   isFetchingNextPage,
   onLoadMore,
+  label = "Load more",
+  showEnd = true,
+  root,
 }: {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   onLoadMore: () => void;
+  label?: string;
+  showEnd?: boolean;
+  root?: { current: Element | null };
 }) {
   function observeSentinel(element: HTMLDivElement | null) {
     if (!element || !hasNextPage || isFetchingNextPage) return;
@@ -16,11 +22,17 @@ export function LoadMore({
       ([entry]) => {
         if (entry?.isIntersecting) onLoadMore();
       },
-      { rootMargin: "240px 0px", threshold: 0 },
+      {
+        root: root?.current ?? null,
+        rootMargin: root ? "80px 0px" : "240px 0px",
+        threshold: 0,
+      },
     );
     observer.observe(element);
     return () => observer.disconnect();
   }
+
+  if (!hasNextPage && !showEnd) return null;
 
   return (
     <div
@@ -30,8 +42,8 @@ export function LoadMore({
       aria-live="polite"
     >
       {hasNextPage ? (
-        <Button disabled={isFetchingNextPage} onClick={onLoadMore}>
-          {isFetchingNextPage ? "Loading…" : "Load more"}
+        <Button type="button" disabled={isFetchingNextPage} onClick={onLoadMore}>
+          {isFetchingNextPage ? "Loading…" : label}
         </Button>
       ) : (
         <p className="text-sm text-app-muted">End of results</p>
