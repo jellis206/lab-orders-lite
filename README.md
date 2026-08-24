@@ -55,20 +55,16 @@ React SPA
   │
   │  REST/JSON through /api
   ▼
-Hono routes
+Hono feature routes
   │
-  ├── Zod request validation
-  │
-  ▼
-Feature application services
-  │
-  ├── framework-independent domain rules
-  │
-  ▼
-Drizzle data access
-  │
-  ▼
-Local Turso / libSQL
+  ├── Zod request validation and response shaping
+  ├── Patient/catalog: focused Drizzle CRUD
+  └── Orders: application service
+        ├── Framework-independent domain rules
+        └── Drizzle transaction and snapshots
+                 │
+                 ▼
+          Local Turso / libSQL
 ```
 
 The frontend and API are separate applications in one Bun workspace:
@@ -88,7 +84,9 @@ lab-orders-lite/
 ```
 
 This keeps HTTP as the canonical application boundary while allowing the two apps to share contracts and pure domain
-logic. A CLI, mobile app, or other client could use the API later without depending on React.
+logic. A CLI, mobile app, or other client could use the API later without depending on React. Patient and catalog CRUD
+remain in focused route modules because another service layer would only delegate; order creation earns an application
+service because it coordinates lookups, business rules, derived values, snapshots, and one transaction.
 
 ## Domain decisions
 
@@ -132,6 +130,12 @@ calculates totals/readiness, and writes the order plus all order items in one tr
 ### Patients are not users
 
 A patient is a clinic record. Do not model `Patient = User` or fold identity into the domain tables. Auth stays out of scope.
+
+### Patients need one contact method
+
+Each patient must have an email address or phone number so the clinic has a way to share results. Either field may be omitted,
+and updates cannot clear the last remaining contact method. This is a deliberately small workflow rule rather than a full
+communication-preference model.
 
 ### Status only moves forward
 
@@ -285,6 +289,10 @@ The project deliberately does **not** include:
 
 OpenAPI is deferred. The Playwright suite is intentionally one primary-flow test rather than a second copy of the unit
 and API suites. The goal is finished, explainable behavior rather than unfinished breadth.
+
+If this moved beyond a take-home, the first improvements would be authentication/authorization and audit history before
+using real patient data, followed by an explicit clinic-timezone and business-calendar policy. I would add OpenAPI or more
+browser flows only when another client or a demonstrated regression risk justified their maintenance cost.
 
 ## Delivery
 

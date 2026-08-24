@@ -154,6 +154,32 @@ test("keeps a selected test visible after the catalog search changes", async () 
   expect(screen.queryByText("CBC · Complete Blood Count")).toBeNull();
 });
 
+test("explains empty patient and test search results", async () => {
+  mockFetch((url) => {
+    if (url.includes("search=missing")) {
+      return Response.json({ items: [], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/patients")) {
+      return Response.json({ items: [patient], nextCursor: null, hasMore: false });
+    }
+    return Response.json({ items: tests, nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/new");
+  await screen.findByRole("button", { name: /Rivera, Ada/ });
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Search patients" }), {
+    target: { value: "missing" },
+  });
+  fireEvent.submit(screen.getByRole("search", { name: "Search patients" }));
+  expect(await screen.findByText("No patients match this search.")).toBeTruthy();
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Search lab tests" }), {
+    target: { value: "missing" },
+  });
+  fireEvent.submit(screen.getByRole("search", { name: "Search lab tests" }));
+  expect(await screen.findByText("No active lab tests match this search.")).toBeTruthy();
+});
+
 test("loads additional catalog pages while choosing tests", async () => {
   mockFetch((url) => {
     if (url.startsWith("/api/patients")) {

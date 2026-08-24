@@ -184,6 +184,13 @@ export function OrderForm() {
                       role="region"
                       aria-label="Patients"
                     >
+                      {patientResults.length === 0 && (
+                        <p className="px-4 py-5 text-center text-sm text-app-muted" role="status">
+                          {patientQuery
+                            ? "No patients match this search."
+                            : "No patients are available."}
+                        </p>
+                      )}
                       <ul className="divide-y divide-app-border">
                         {patientResults.map((patient) => (
                           <li key={patient.id}>
@@ -262,6 +269,13 @@ export function OrderForm() {
                   role="region"
                   aria-label="Active lab tests"
                 >
+                  {testResults.length === 0 && (
+                    <p className="px-4 py-5 text-center text-sm text-app-muted" role="status">
+                      {testQuery
+                        ? "No active lab tests match this search."
+                        : "No active lab tests are available."}
+                    </p>
+                  )}
                   <ul className="divide-y divide-app-border">
                     {testResults.map((test) => {
                       const checked = selectedTests.some((item) => item.id === test.id);

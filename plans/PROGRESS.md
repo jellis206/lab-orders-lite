@@ -4,7 +4,7 @@ Living status for Lab Orders Lite. Product and setup live in [`../README.md`](..
 
 ## Status
 
-The original nine-phase vertical slice is **done** and merged (`implement-phases-3-9` via PR #1). Current branch is `tidying-up`: list UX polish on top of that slice.
+The original nine-phase vertical slice is **done** and merged (`implement-phases-3-9` via PR #1). The remaining list UX and accessibility polish is complete on `tidying-up`.
 
 ## Shipped
 
@@ -15,12 +15,8 @@ The original nine-phase vertical slice is **done** and merged (`implement-phases
 - Shared `LoadMore`: keyboard **Load more**, scroll-to-fetch, and **End of results**
 - Matching `min-h-10` search/filter controls on list toolbars
 - Isolated Playwright happy path; `bun run check` stays deterministic without Playwright
-
-## In flight (`tidying-up`)
-
-- Toolbar height/alignment on orders and lab tests
-- Progressive list loading without dropping the accessible Load more control
-- No `useEffect` in app code (`useSyncExternalStore` / callback-ref subscriptions only)
+- Aligned list toolbars and progressive loading with an accessible **Load more** fallback
+- No `useEffect` in app code; the intersection subscription uses a callback-ref cleanup
 
 ## Later
 
