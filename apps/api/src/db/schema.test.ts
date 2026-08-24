@@ -72,7 +72,7 @@ describe("database foundation", () => {
   });
 
   test("enforces required patient values and provides the name cursor index", async () => {
-    expect(
+    await expect(
       client.execute(
         "insert into patients (id, first_name, last_name, date_of_birth, created_at, updated_at) values ('bad', '', 'Stone', '1990-02-03', 'now', 'now')",
       ),
@@ -85,10 +85,16 @@ describe("database foundation", () => {
 
   test("enforces unique codes, nonnegative prices, and positive turnaround", async () => {
     await insertLabTest();
-    expect(insertLabTest(["test-2", "CBC", "Duplicate", 1000, 1, "now", "now"])).rejects.toThrow();
-    expect(insertLabTest(["test-3", "NEG", "Negative", -1, 1, "now", "now"])).rejects.toThrow();
-    expect(insertLabTest(["test-4", "ZERO", "Zero hours", 100, 0, "now", "now"])).rejects.toThrow();
-    expect(
+    await expect(
+      insertLabTest(["test-2", "CBC", "Duplicate", 1000, 1, "now", "now"]),
+    ).rejects.toThrow();
+    await expect(
+      insertLabTest(["test-3", "NEG", "Negative", -1, 1, "now", "now"]),
+    ).rejects.toThrow();
+    await expect(
+      insertLabTest(["test-4", "ZERO", "Zero hours", 100, 0, "now", "now"]),
+    ).rejects.toThrow();
+    await expect(
       client.execute(
         "insert into lab_tests (id, code, name, price_cents, turnaround_hours, active, created_at, updated_at) values ('test-5', 'ACTIVE', 'Bad active', 100, 1, 2, 'now', 'now')",
       ),
@@ -96,13 +102,13 @@ describe("database foundation", () => {
   });
 
   test("enforces order foreign keys and statuses", async () => {
-    expect(
+    await expect(
       client.execute(
         "insert into orders (id, patient_id, status, ordered_at, total_cents, estimated_ready_at, created_at, updated_at) values ('bad', 'missing', 'pending', 'now', 0, 'later', 'now', 'now')",
       ),
     ).rejects.toThrow();
     await insertPatient();
-    expect(
+    await expect(
       client.execute(
         "insert into orders (id, patient_id, status, ordered_at, total_cents, estimated_ready_at, created_at, updated_at) values ('bad', 'patient-1', 'unknown', 'now', 0, 'later', 'now', 'now')",
       ),
@@ -118,8 +124,8 @@ describe("database foundation", () => {
       args: ["order-1", "test-1", "CBC", "Complete Blood Count", 3000, 12],
     };
     await client.execute(statement);
-    expect(client.execute(statement)).rejects.toThrow();
-    expect(
+    await expect(client.execute(statement)).rejects.toThrow();
+    await expect(
       client.execute(
         "insert into order_tests (order_id, lab_test_id, test_code, test_name, price_cents, turnaround_hours) values ('order-1', 'missing', 'X', 'Missing', 1, 1)",
       ),

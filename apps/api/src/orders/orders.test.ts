@@ -157,7 +157,7 @@ describe("order creation", () => {
   });
 
   test("rolls back the parent order when a child snapshot cannot be written", async () => {
-    expect(
+    await expect(
       persistOrderRows(
         database.db,
         {
@@ -419,7 +419,7 @@ describe("order status", () => {
     const createdBody = orderDetailResponseSchema.parse(created.body);
     await transitionOrderStatus(database.db, createdBody.id, "pending", "in_progress");
 
-    expect(
+    await expect(
       transitionOrderStatus(database.db, createdBody.id, "pending", "cancelled"),
     ).rejects.toMatchObject({
       code: "STATUS_CONFLICT",

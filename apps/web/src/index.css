@@ -88,6 +88,8 @@ input:disabled {
   summary,
   [role="button"],
   [tabindex]:not([tabindex="-1"]),
+  input:not([type="hidden"]),
+  textarea,
   input[type="button"],
   input[type="submit"],
   input[type="reset"],

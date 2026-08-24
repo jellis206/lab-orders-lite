@@ -1,4 +1,4 @@
-import { useRef, type MouseEvent, type RefObject } from "react";
+import { useRef, type MouseEvent } from "react";
 import { Button } from "./button";
 
 /** How early the next page starts loading, measured from the sentinel. */
@@ -22,7 +22,7 @@ export function LoadMore({
   label?: string;
   /** `picker` scrolls inside `root` and stays silent once exhausted. */
   variant?: "page" | "picker";
-  root?: RefObject<Element | null>;
+  root?: Element | null;
 }) {
   const { hasNextPage, isFetchingNextPage, fetchNextPage } = pager;
   const endRef = useRef<HTMLParagraphElement>(null);
@@ -31,14 +31,20 @@ export function LoadMore({
   // React runs the returned cleanup and re-subscribes whenever the props that
   // decide whether to observe (hasNextPage, isFetchingNextPage) change.
   function observeSentinel(element: HTMLDivElement | null) {
-    if (!element || !hasNextPage || isFetchingNextPage) return;
+    if (
+      !element ||
+      !hasNextPage ||
+      isFetchingNextPage ||
+      (variant === "picker" && !root)
+    )
+      return;
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry?.isIntersecting) void fetchNextPage();
       },
       {
-        root: root?.current ?? null,
+        root: root ?? null,
         rootMargin: variant === "picker" ? PICKER_PREFETCH_MARGIN : PAGE_PREFETCH_MARGIN,
         threshold: 0,
       },

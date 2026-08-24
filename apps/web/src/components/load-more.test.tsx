@@ -5,13 +5,15 @@ import { LoadMore, type Pager } from "./load-more";
 
 class FakeIntersectionObserver implements IntersectionObserver {
   static callbacks: IntersectionObserverCallback[] = [];
+  static roots: (Element | Document | null)[] = [];
   readonly root = null;
   readonly rootMargin = "";
   readonly scrollMargin = "";
   readonly thresholds: number[] = [];
 
-  constructor(callback: IntersectionObserverCallback) {
+  constructor(callback: IntersectionObserverCallback, options?: IntersectionObserverInit) {
     FakeIntersectionObserver.callbacks.push(callback);
+    FakeIntersectionObserver.roots.push(options?.root ?? null);
   }
 
   observe() {}
@@ -27,6 +29,7 @@ let realIntersectionObserver: typeof IntersectionObserver;
 beforeEach(() => {
   realIntersectionObserver = globalThis.IntersectionObserver;
   FakeIntersectionObserver.callbacks = [];
+  FakeIntersectionObserver.roots = [];
   globalThis.IntersectionObserver = FakeIntersectionObserver;
 });
 
@@ -95,6 +98,22 @@ test("loads the next page when the sentinel intersects", () => {
   scrollSentinelIntoView();
 
   expect(loads).toEqual([1]);
+});
+
+test("uses the assigned picker scroll region as the observer root", async () => {
+  function Picker() {
+    const [root, setRoot] = useState<HTMLDivElement | null>(null);
+    return (
+      <div ref={setRoot} role="region" aria-label="Picker results">
+        <LoadMore pager={pagerStub()} variant="picker" root={root} />
+      </div>
+    );
+  }
+
+  render(<Picker />);
+  const root = screen.getByRole("region", { name: "Picker results" });
+
+  await waitFor(() => expect(FakeIntersectionObserver.roots).toEqual([root]));
 });
 
 test("keeps an explicit load more control for keyboard users", () => {

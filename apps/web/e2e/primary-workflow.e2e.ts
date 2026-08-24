@@ -3,8 +3,19 @@ import { expect, test } from "@playwright/test";
 test("create a patient and a multi-test order, then verify detail and list", async ({ page }) => {
   const lastName = `E2e${Date.now()}`;
 
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/patients/new");
-  await page.getByLabel("First name").fill("Nova");
+
+  const firstName = page.getByLabel("First name");
+  for (let attempt = 0; attempt < 10 && !(await firstName.evaluate((input) => input === document.activeElement)); attempt += 1) {
+    await page.keyboard.press("Tab");
+  }
+  await expect(firstName).toBeFocused();
+  await expect
+    .poll(() => firstName.evaluate((input) => getComputedStyle(input).outlineStyle))
+    .toBe("solid");
+
+  await firstName.fill("Nova");
   await page.getByLabel("Last name").fill(lastName);
   await page.getByLabel("Date of birth").fill("1991-06-15");
   await page.getByLabel("Email").fill(`nova.${lastName.toLowerCase()}@example.test`);

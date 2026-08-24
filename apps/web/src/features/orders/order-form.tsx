@@ -8,7 +8,7 @@ import { calculateEstimatedReadyAt, calculateOrderTotal } from "@lab-orders/doma
 import { useForm } from "@tanstack/react-form";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { ApiRequestError } from "../../api/client";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
@@ -32,8 +32,8 @@ export function OrderForm() {
   const [testQuery, setTestQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<PatientResponse>();
   const [selectedTests, setSelectedTests] = useState<LabTestResponse[]>([]);
-  const patientListRef = useRef<HTMLDivElement>(null);
-  const testCatalogRef = useRef<HTMLDivElement>(null);
+  const [patientListElement, setPatientListElement] = useState<HTMLDivElement | null>(null);
+  const [testCatalogElement, setTestCatalogElement] = useState<HTMLDivElement | null>(null);
   const patients = useInfiniteQuery(patientListOptions(patientQuery));
   const tests = useInfiniteQuery(labTestListOptions(testQuery, true));
   const mutation = useMutation({
@@ -178,7 +178,7 @@ export function OrderForm() {
                     </p>
                   ) : (
                     <div
-                      ref={patientListRef}
+                      ref={setPatientListElement}
                       className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
                       tabIndex={0}
                       role="region"
@@ -211,7 +211,7 @@ export function OrderForm() {
                         pager={patients}
                         label="Load more patients"
                         variant="picker"
-                        root={patientListRef}
+                        root={patientListElement}
                       />
                     </div>
                   )}
@@ -263,7 +263,7 @@ export function OrderForm() {
                 </p>
               ) : (
                 <div
-                  ref={testCatalogRef}
+                  ref={setTestCatalogElement}
                   className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
                   tabIndex={0}
                   role="region"
@@ -305,7 +305,7 @@ export function OrderForm() {
                     pager={tests}
                     label="Load more tests"
                     variant="picker"
-                    root={testCatalogRef}
+                    root={testCatalogElement}
                   />
                 </div>
               )}
