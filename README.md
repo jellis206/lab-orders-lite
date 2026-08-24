@@ -78,9 +78,7 @@ lab-orders-lite/
 │   ├── contracts/    # Framework-independent Zod API contracts
 │   └── domain/       # Pure business rules and calculations
 ├── drizzle/          # Committed database migrations and metadata
-├── plans/            # Current progress and later enhancements
-├── scripts/          # Isolated Playwright server helper
-└── orig_instructions.md
+└── scripts/          # Isolated Playwright server helper
 ```
 
 This keeps HTTP as the canonical application boundary while allowing the two apps to share contracts and pure domain
@@ -293,10 +291,6 @@ and API suites. The goal is finished, explainable behavior rather than unfinishe
 If this moved beyond a take-home, the first improvements would be authentication/authorization and audit history before
 using real patient data, followed by an explicit clinic-timezone and business-calendar policy. I would add OpenAPI or more
 browser flows only when another client or a demonstrated regression risk justified their maintenance cost.
-
-## Delivery
-
-The original nine-phase plan is complete. Current status and later ideas live in [`plans/PROGRESS.md`](./plans/PROGRESS.md).
 
 ## AI usage
 
