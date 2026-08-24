@@ -97,11 +97,7 @@ export function PatientListPage() {
               ))}
             </ul>
           </div>
-          <LoadMore
-            hasNextPage={Boolean(query.hasNextPage)}
-            isFetchingNextPage={query.isFetchingNextPage}
-            onLoadMore={() => void query.fetchNextPage()}
-          />
+          <LoadMore pager={query} />
         </>
       )}
     </section>

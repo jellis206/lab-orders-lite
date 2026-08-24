@@ -4,8 +4,8 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
-import { LoadMore } from "../../components/load-more";
 import { Listbox, ListboxOption } from "../../components/listbox";
+import { LoadMore } from "../../components/load-more";
 import { labTestListOptions } from "./api";
 
 function parseActive(value?: "true" | "false") {
@@ -121,7 +121,7 @@ export function LabTestListPage() {
                   <th className="px-5 py-3 font-medium">Code</th>
                   <th className="px-5 py-3 font-medium">Name</th>
                   <th className="px-5 py-3 font-medium">Price</th>
-                  <th className="px-5 py-3 font-medium">Turnaround</th>
+                  <th className="hidden px-5 py-3 font-medium md:table-cell">Turnaround</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                 </tr>
               </thead>
@@ -139,7 +139,9 @@ export function LabTestListPage() {
                     </td>
                     <td className="px-5 py-4 text-app-muted">{test.name}</td>
                     <td className="px-5 py-4 text-app-muted">{formatCents(test.priceCents)}</td>
-                    <td className="px-5 py-4 text-app-muted">{test.turnaroundHours} hours</td>
+                    <td className="hidden px-5 py-4 text-app-muted md:table-cell">
+                      {test.turnaroundHours} hours
+                    </td>
                     <td className="px-5 py-4">
                       <span
                         className={
@@ -156,11 +158,7 @@ export function LabTestListPage() {
               </tbody>
             </table>
           </div>
-          <LoadMore
-            hasNextPage={Boolean(query.hasNextPage)}
-            isFetchingNextPage={query.isFetchingNextPage}
-            onLoadMore={() => void query.fetchNextPage()}
-          />
+          <LoadMore pager={query} />
         </>
       )}
     </section>

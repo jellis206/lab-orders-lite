@@ -21,6 +21,7 @@
   --app-subtle: #71717a;
   --app-border: #e4e4e7;
   --app-hover: #f4f4f5;
+  --focus-ring: #c2410c;
   font-family: var(--font-sans);
   color: var(--app-text);
   background: var(--app-bg);
@@ -39,6 +40,7 @@
     --app-subtle: #71717a;
     --app-border: #3f3f46;
     --app-hover: #27272a;
+    --focus-ring: #fbbf24;
   }
 }
 
@@ -74,4 +76,25 @@ button[data-disabled],
 select:disabled,
 input:disabled {
   cursor: not-allowed;
+}
+
+/* A warm, high-contrast accent stays visible around blue primary controls and
+   against both app backgrounds. Keep this global so raw and Catalyst controls
+   share the same keyboard affordance. */
+:is(
+  button,
+  a,
+  select,
+  summary,
+  [role="button"],
+  [tabindex]:not([tabindex="-1"]),
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="file"]
+):focus-visible {
+  outline: 3px solid var(--focus-ring) !important;
+  outline-offset: 3px !important;
 }

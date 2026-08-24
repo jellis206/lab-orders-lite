@@ -4,7 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "../../query-client";
 import { createTestRouter } from "../../router";
-import { installFetchMock } from "../../test/fetch";
+import { installFetchMock } from "../../test-support/fetch";
 
 const patient = {
   id: "patient-ada",

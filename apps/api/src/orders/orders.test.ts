@@ -7,8 +7,8 @@ import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
 import { createApp } from "../app";
 import { labTests, orders, patients } from "../db/schema";
-import { createTestDatabase } from "../test/database";
-import { persistOrderRows } from "../test/persist-order";
+import { createTestDatabase } from "../test-support/database";
+import { persistOrderRows } from "../test-support/persist-order";
 import { transitionOrderStatus } from "./order.service";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
@@ -158,7 +158,7 @@ describe("order creation", () => {
   });
 
   test("rolls back the parent order when a child snapshot cannot be written", async () => {
-    await expect(
+    expect(
       persistOrderRows(
         database.db,
         {
@@ -420,7 +420,7 @@ describe("order status", () => {
     const createdBody = orderDetailResponseSchema.parse(created.body);
     await transitionOrderStatus(database.db, createdBody.id, "pending", "in_progress");
 
-    await expect(
+    expect(
       transitionOrderStatus(database.db, createdBody.id, "pending", "cancelled"),
     ).rejects.toMatchObject({
       code: "STATUS_CONFLICT",

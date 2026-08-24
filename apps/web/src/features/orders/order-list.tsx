@@ -3,8 +3,8 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
-import { LoadMore } from "../../components/load-more";
 import { Listbox, ListboxOption } from "../../components/listbox";
+import { LoadMore } from "../../components/load-more";
 import { formatCents } from "@lab-orders/contracts";
 import { orderStatuses } from "@lab-orders/domain";
 import { orderListOptions } from "./api";
@@ -142,10 +142,10 @@ export function OrderListPage() {
                 <tr>
                   <th className="px-5 py-3 font-medium">Patient</th>
                   <th className="px-5 py-3 font-medium">Status</th>
-                  <th className="px-5 py-3 font-medium">Ordered</th>
-                  <th className="px-5 py-3 font-medium">Tests</th>
+                  <th className="hidden px-5 py-3 font-medium md:table-cell">Ordered</th>
+                  <th className="hidden px-5 py-3 font-medium sm:table-cell">Tests</th>
                   <th className="px-5 py-3 font-medium">Total</th>
-                  <th className="px-5 py-3 font-medium">Ready</th>
+                  <th className="hidden px-5 py-3 font-medium lg:table-cell">Ready</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-app-border">
@@ -161,10 +161,14 @@ export function OrderListPage() {
                       </Link>
                     </td>
                     <td className="px-5 py-4 capitalize">{formatStatus(order.status)}</td>
-                    <td className="px-5 py-4 text-app-muted">{formatDateTime(order.orderedAt)}</td>
-                    <td className="px-5 py-4 text-app-muted">{order.testCount}</td>
+                    <td className="hidden px-5 py-4 text-app-muted md:table-cell">
+                      {formatDateTime(order.orderedAt)}
+                    </td>
+                    <td className="hidden px-5 py-4 text-app-muted sm:table-cell">
+                      {order.testCount}
+                    </td>
                     <td className="px-5 py-4 text-app-muted">{formatCents(order.totalCents)}</td>
-                    <td className="px-5 py-4 text-app-muted">
+                    <td className="hidden px-5 py-4 text-app-muted lg:table-cell">
                       {formatDateTime(order.estimatedReadyAt)}
                     </td>
                   </tr>
@@ -172,11 +176,7 @@ export function OrderListPage() {
               </tbody>
             </table>
           </div>
-          <LoadMore
-            hasNextPage={Boolean(query.hasNextPage)}
-            isFetchingNextPage={query.isFetchingNextPage}
-            onLoadMore={() => void query.fetchNextPage()}
-          />
+          <LoadMore pager={query} />
         </>
       )}
     </section>

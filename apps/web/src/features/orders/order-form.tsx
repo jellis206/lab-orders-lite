@@ -201,11 +201,9 @@ export function OrderForm() {
                         ))}
                       </ul>
                       <LoadMore
-                        hasNextPage={Boolean(patients.hasNextPage)}
-                        isFetchingNextPage={patients.isFetchingNextPage}
-                        onLoadMore={() => void patients.fetchNextPage()}
+                        pager={patients}
                         label="Load more patients"
-                        showEnd={false}
+                        variant="picker"
                         root={patientListRef}
                       />
                     </div>
@@ -290,11 +288,9 @@ export function OrderForm() {
                     })}
                   </ul>
                   <LoadMore
-                    hasNextPage={Boolean(tests.hasNextPage)}
-                    isFetchingNextPage={tests.isFetchingNextPage}
-                    onLoadMore={() => void tests.fetchNextPage()}
+                    pager={tests}
                     label="Load more tests"
-                    showEnd={false}
+                    variant="picker"
                     root={testCatalogRef}
                   />
                 </div>
