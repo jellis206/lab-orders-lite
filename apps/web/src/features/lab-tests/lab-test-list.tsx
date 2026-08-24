@@ -5,6 +5,7 @@ import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
 import { Listbox, ListboxOption } from "../../components/listbox";
+import { LoadMore } from "../../components/load-more";
 import { labTestListOptions } from "./api";
 
 function parseActive(value?: "true" | "false") {
@@ -66,7 +67,7 @@ export function LabTestListPage() {
           <Button type="submit">Search</Button>
         </form>
         <div className="w-full sm:w-44">
-          <label className="text-sm font-medium text-app-text" htmlFor="lab-test-active">
+          <label className="mb-1 block text-sm font-medium text-app-text" htmlFor="lab-test-active">
             Status
           </label>
           <Listbox
@@ -82,7 +83,6 @@ export function LabTestListPage() {
                 }),
               });
             }}
-            className="mt-1"
           >
             <ListboxOption value="all">All tests</ListboxOption>
             <ListboxOption value="true">Active</ListboxOption>
@@ -121,7 +121,7 @@ export function LabTestListPage() {
                   <th className="px-5 py-3 font-medium">Code</th>
                   <th className="px-5 py-3 font-medium">Name</th>
                   <th className="px-5 py-3 font-medium">Price</th>
-                  <th className="px-5 py-3 font-medium">Turnaround</th>
+                  <th className="hidden px-5 py-3 font-medium md:table-cell">Turnaround</th>
                   <th className="px-5 py-3 font-medium">Status</th>
                 </tr>
               </thead>
@@ -139,7 +139,9 @@ export function LabTestListPage() {
                     </td>
                     <td className="px-5 py-4 text-app-muted">{test.name}</td>
                     <td className="px-5 py-4 text-app-muted">{formatCents(test.priceCents)}</td>
-                    <td className="px-5 py-4 text-app-muted">{test.turnaroundHours} hours</td>
+                    <td className="hidden px-5 py-4 text-app-muted md:table-cell">
+                      {test.turnaroundHours} hours
+                    </td>
                     <td className="px-5 py-4">
                       <span
                         className={
@@ -156,16 +158,7 @@ export function LabTestListPage() {
               </tbody>
             </table>
           </div>
-          {query.hasNextPage && (
-            <div className="mt-5 text-center">
-              <Button
-                disabled={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {query.isFetchingNextPage ? "Loading…" : "Load more"}
-              </Button>
-            </div>
-          )}
+          <LoadMore pager={query} />
         </>
       )}
     </section>

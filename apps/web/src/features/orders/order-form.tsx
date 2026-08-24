@@ -12,6 +12,7 @@ import { useState, type FormEvent } from "react";
 import { ApiRequestError } from "../../api/client";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
+import { LoadMore } from "../../components/load-more";
 import { labTestListOptions } from "../lab-tests/api";
 import { patientListOptions } from "../patients/api";
 import { createOrder, orderKeys } from "./api";
@@ -31,6 +32,8 @@ export function OrderForm() {
   const [testQuery, setTestQuery] = useState("");
   const [selectedPatient, setSelectedPatient] = useState<PatientResponse>();
   const [selectedTests, setSelectedTests] = useState<LabTestResponse[]>([]);
+  const [patientListElement, setPatientListElement] = useState<HTMLDivElement | null>(null);
+  const [testCatalogElement, setTestCatalogElement] = useState<HTMLDivElement | null>(null);
   const patients = useInfiniteQuery(patientListOptions(patientQuery));
   const tests = useInfiniteQuery(labTestListOptions(testQuery, true));
   const mutation = useMutation({
@@ -174,32 +177,43 @@ export function OrderForm() {
                       Patients could not be loaded. {patients.error.message}
                     </p>
                   ) : (
-                    <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
-                      {patientResults.map((patient) => (
-                        <li key={patient.id}>
-                          <button
-                            type="button"
-                            className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-app-hover"
-                            onClick={() => selectPatient(patient)}
-                          >
-                            <span className="font-medium text-app-text">
-                              {patient.lastName}, {patient.firstName}
-                            </span>
-                            <span className="text-sm text-app-muted">{patient.dateOfBirth}</span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  {patients.hasNextPage && (
-                    <Button
-                      type="button"
-                      className="mt-3"
-                      disabled={patients.isFetchingNextPage}
-                      onClick={() => void patients.fetchNextPage()}
+                    <div
+                      ref={setPatientListElement}
+                      className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
+                      tabIndex={0}
+                      role="region"
+                      aria-label="Patients"
                     >
-                      {patients.isFetchingNextPage ? "Loading…" : "Load more patients"}
-                    </Button>
+                      {patientResults.length === 0 && (
+                        <p className="px-4 py-5 text-center text-sm text-app-muted" role="status">
+                          {patientQuery
+                            ? "No patients match this search."
+                            : "No patients are available."}
+                        </p>
+                      )}
+                      <ul className="divide-y divide-app-border">
+                        {patientResults.map((patient) => (
+                          <li key={patient.id}>
+                            <button
+                              type="button"
+                              className="flex w-full items-center justify-between px-4 py-3 text-left hover:bg-app-hover"
+                              onClick={() => selectPatient(patient)}
+                            >
+                              <span className="font-medium text-app-text">
+                                {patient.lastName}, {patient.firstName}
+                              </span>
+                              <span className="text-sm text-app-muted">{patient.dateOfBirth}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                      <LoadMore
+                        pager={patients}
+                        label="Load more patients"
+                        variant="picker"
+                        root={patientListElement}
+                      />
+                    </div>
                   )}
                 </>
               )}
@@ -248,41 +262,52 @@ export function OrderForm() {
                   Lab tests could not be loaded. {tests.error.message}
                 </p>
               ) : (
-                <ul className="mt-3 divide-y divide-app-border rounded-lg border border-app-border">
-                  {testResults.map((test) => {
-                    const checked = selectedTests.some((item) => item.id === test.id);
-                    return (
-                      <li key={test.id}>
-                        <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-app-hover">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={() => toggleTest(test)}
-                            className="mt-1 size-4 rounded border-app-border text-blue-600 focus:ring-blue-600"
-                          />
-                          <span>
-                            <span className="block font-medium text-app-text">
-                              {test.code} · {test.name}
-                            </span>
-                            <span className="text-sm text-app-muted">
-                              {formatCents(test.priceCents)} · {test.turnaroundHours} hours
-                            </span>
-                          </span>
-                        </label>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-              {tests.hasNextPage && (
-                <Button
-                  type="button"
-                  className="mt-3"
-                  disabled={tests.isFetchingNextPage}
-                  onClick={() => void tests.fetchNextPage()}
+                <div
+                  ref={setTestCatalogElement}
+                  className="mt-3 max-h-64 overflow-y-auto rounded-lg border border-app-border"
+                  tabIndex={0}
+                  role="region"
+                  aria-label="Active lab tests"
                 >
-                  {tests.isFetchingNextPage ? "Loading…" : "Load more tests"}
-                </Button>
+                  {testResults.length === 0 && (
+                    <p className="px-4 py-5 text-center text-sm text-app-muted" role="status">
+                      {testQuery
+                        ? "No active lab tests match this search."
+                        : "No active lab tests are available."}
+                    </p>
+                  )}
+                  <ul className="divide-y divide-app-border">
+                    {testResults.map((test) => {
+                      const checked = selectedTests.some((item) => item.id === test.id);
+                      return (
+                        <li key={test.id}>
+                          <label className="flex cursor-pointer items-start gap-3 px-4 py-3 hover:bg-app-hover">
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() => toggleTest(test)}
+                              className="mt-1 size-4 rounded border-app-border text-blue-600 focus:ring-blue-600"
+                            />
+                            <span>
+                              <span className="block font-medium text-app-text">
+                                {test.code} · {test.name}
+                              </span>
+                              <span className="text-sm text-app-muted">
+                                {formatCents(test.priceCents)} · {test.turnaroundHours} hours
+                              </span>
+                            </span>
+                          </label>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                  <LoadMore
+                    pager={tests}
+                    label="Load more tests"
+                    variant="picker"
+                    root={testCatalogElement}
+                  />
+                </div>
               )}
               {selectedTests.length > 0 && (
                 <div className="mt-5">
@@ -323,46 +348,49 @@ export function OrderForm() {
         </form.Field>
       </section>
 
-      <section className="rounded-xl border border-app-border bg-app-surface p-6">
-        <h2 className="text-lg font-semibold text-app-text">Preview</h2>
-        {selectedTests.length === 0 ? (
-          <p className="mt-2 text-sm text-app-muted">Select tests to preview cost and readiness.</p>
-        ) : (
-          <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-            <div>
-              <dt className="text-zinc-500">Total</dt>
-              <dd className="font-semibold text-app-text">{formatCents(previewTotal)}</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Slowest turnaround</dt>
-              <dd className="font-semibold text-app-text">{slowest} hours</dd>
-            </div>
-            <div>
-              <dt className="text-zinc-500">Estimated ready</dt>
-              <dd className="font-semibold text-app-text">
-                {previewReady ? formatDateTime(previewReady) : "—"}
-              </dd>
-            </div>
-          </dl>
-        )}
+      <section className="flex items-end justify-between gap-4 rounded-xl border border-app-border bg-app-surface p-6">
+        <div className="min-w-0 flex-1">
+          <h2 className="text-lg font-semibold text-app-text">Preview</h2>
+          {selectedTests.length === 0 ? (
+            <p className="mt-2 text-sm text-app-muted">
+              Select tests to preview cost and readiness.
+            </p>
+          ) : (
+            <dl className="mt-4 flex flex-wrap gap-x-8 gap-y-3 text-sm">
+              <div>
+                <dt className="text-zinc-500">Total</dt>
+                <dd className="font-semibold text-app-text">{formatCents(previewTotal)}</dd>
+              </div>
+              <div>
+                <dt className="text-zinc-500">Slowest turnaround</dt>
+                <dd className="font-semibold text-app-text">{slowest} hours</dd>
+              </div>
+              <div>
+                <dt className="text-zinc-500">Estimated ready</dt>
+                <dd className="font-semibold text-app-text">
+                  {previewReady ? formatDateTime(previewReady) : "—"}
+                </dd>
+              </div>
+            </dl>
+          )}
+        </div>
+        <div className="flex shrink-0 gap-3">
+          <Button
+            type="button"
+            disabled={mutation.isPending}
+            onClick={() => void form.handleSubmit()}
+          >
+            {mutation.isPending ? "Creating order…" : "Create order"}
+          </Button>
+          <button
+            type="button"
+            className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
+            onClick={() => void navigate({ to: "/orders" })}
+          >
+            Cancel
+          </button>
+        </div>
       </section>
-
-      <div className="flex gap-3">
-        <Button
-          type="button"
-          disabled={mutation.isPending}
-          onClick={() => void form.handleSubmit()}
-        >
-          {mutation.isPending ? "Creating order…" : "Create order"}
-        </Button>
-        <button
-          type="button"
-          className="rounded-lg px-4 py-2 text-sm font-semibold text-app-muted hover:bg-app-hover"
-          onClick={() => void navigate({ to: "/orders" })}
-        >
-          Cancel
-        </button>
-      </div>
     </div>
   );
 }

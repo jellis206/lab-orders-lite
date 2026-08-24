@@ -68,6 +68,12 @@ const rootRoute = createRootRoute({
     <div className="rounded-xl border border-app-border bg-app-surface p-8">
       <h1 className="text-2xl font-semibold text-app-text">Page not found</h1>
       <p className="mt-2 text-app-muted">The page you requested does not exist.</p>
+      <Link
+        to="/"
+        className="mt-5 inline-flex min-h-10 items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-500"
+      >
+        Back to overview
+      </Link>
     </div>
   ),
   errorComponent: ({ error, reset }) => (

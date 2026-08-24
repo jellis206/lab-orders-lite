@@ -6,7 +6,7 @@ import {
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { patients } from "../db/schema";
 import { createApp } from "../app";
-import { createTestDatabase } from "../test/database";
+import { createTestDatabase } from "../test-support/database";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
 let app: ReturnType<typeof createApp>;

@@ -4,7 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "../../query-client";
 import { createTestRouter } from "../../router";
-import { installFetchMock } from "../../test/fetch";
+import { installFetchMock } from "../../test-support/fetch";
 
 const patient = {
   id: "patient-ada",
@@ -109,6 +109,27 @@ test("selects a patient and tests, then previews total and slowest turnaround", 
   expect(screen.getAllByText("CBC · Complete Blood Count").length).toBeGreaterThan(0);
 });
 
+test("keeps the patient picker in a short scrolling list when changing patient", async () => {
+  const other = { ...patient, id: "patient-grace", firstName: "Grace", lastName: "Hopper" };
+  mockFetch((url) => {
+    if (url.includes("/api/patients") && url.includes("after=cursor-1")) {
+      return Response.json({ items: [other], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/patients")) {
+      return Response.json({ items: [patient], nextCursor: "cursor-1", hasMore: true });
+    }
+    return Response.json({ items: tests, nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/new");
+  expect(await screen.findByRole("region", { name: "Patients" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: /Rivera, Ada/ }));
+  expect(screen.queryByRole("region", { name: "Patients" })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Change patient" }));
+  expect(screen.getByRole("region", { name: "Patients" })).toBeTruthy();
+  fireEvent.click(screen.getByRole("button", { name: "Load more patients" }));
+  expect(await screen.findByRole("button", { name: /Hopper, Grace/ })).toBeTruthy();
+});
+
 test("keeps a selected test visible after the catalog search changes", async () => {
   mockFetch((url) => {
     if (url.startsWith("/api/patients")) {
@@ -131,6 +152,56 @@ test("keeps a selected test visible after the catalog search changes", async () 
   fireEvent.click(screen.getByRole("button", { name: "Remove CBC" }));
   expect(screen.queryByRole("heading", { name: "Selected tests" })).toBeNull();
   expect(screen.queryByText("CBC · Complete Blood Count")).toBeNull();
+});
+
+test("explains empty patient and test search results", async () => {
+  mockFetch((url) => {
+    if (url.includes("search=missing")) {
+      return Response.json({ items: [], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/patients")) {
+      return Response.json({ items: [patient], nextCursor: null, hasMore: false });
+    }
+    return Response.json({ items: tests, nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/new");
+  await screen.findByRole("button", { name: /Rivera, Ada/ });
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Search patients" }), {
+    target: { value: "missing" },
+  });
+  fireEvent.submit(screen.getByRole("search", { name: "Search patients" }));
+  expect(await screen.findByText("No patients match this search.")).toBeTruthy();
+
+  fireEvent.change(screen.getByRole("textbox", { name: "Search lab tests" }), {
+    target: { value: "missing" },
+  });
+  fireEvent.submit(screen.getByRole("search", { name: "Search lab tests" }));
+  expect(await screen.findByText("No active lab tests match this search.")).toBeTruthy();
+});
+
+test("loads additional catalog pages while choosing tests", async () => {
+  mockFetch((url) => {
+    if (url.startsWith("/api/patients")) {
+      return Response.json({ items: [patient], nextCursor: null, hasMore: false });
+    }
+    if (url.includes("/api/tests") && url.includes("after=cursor-1")) {
+      return Response.json({ items: [tests[1]], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/tests")) {
+      return Response.json({ items: [tests[0]], nextCursor: "cursor-1", hasMore: true });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders/new");
+  expect(await screen.findByRole("region", { name: "Active lab tests" })).toBeTruthy();
+  expect(screen.getByRole("checkbox", { name: /CBC/ })).toBeTruthy();
+  expect(screen.queryByRole("checkbox", { name: /CMP/ })).toBeNull();
+  fireEvent.click(screen.getByRole("button", { name: "Load more tests" }));
+  expect(await screen.findByRole("checkbox", { name: /CMP/ })).toBeTruthy();
+  await waitFor(() =>
+    expect(requests.some(({ url }) => url.includes("after=cursor-1"))).toBe(true),
+  );
 });
 
 test("does not submit an empty selection", async () => {
@@ -260,6 +331,36 @@ test("distinguishes an empty catalog from empty filtered results", async () => {
   mockFetch(() => Response.json({ items: [], nextCursor: null, hasMore: false }));
   renderApp("/orders?search=nobody");
   expect(await screen.findByRole("heading", { name: "No matching orders" })).toBeTruthy();
+});
+
+test("loads additional order pages from the next cursor", async () => {
+  const summary = (({ tests: _unused, ...rest }) => rest)(createdOrder);
+  mockFetch((url) => {
+    if (url.includes("after=cursor-1")) {
+      return Response.json({ items: [], nextCursor: null, hasMore: false });
+    }
+    if (url.startsWith("/api/orders")) {
+      return Response.json({ items: [summary], nextCursor: "cursor-1", hasMore: true });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders");
+  fireEvent.click(await screen.findByRole("button", { name: "Load more" }));
+  await waitFor(() =>
+    expect(requests.some(({ url }) => url.includes("after=cursor-1"))).toBe(true),
+  );
+});
+
+test("announces the end of the order list", async () => {
+  const summary = (({ tests: _unused, ...rest }) => rest)(createdOrder);
+  mockFetch((url) => {
+    if (url.startsWith("/api/orders")) {
+      return Response.json({ items: [summary], nextCursor: null, hasMore: false });
+    }
+    return Response.json({ items: [], nextCursor: null, hasMore: false });
+  });
+  renderApp("/orders");
+  expect(await screen.findByText("End of results")).toBeTruthy();
 });
 
 test("starts a pending order and requires confirmation to cancel", async () => {

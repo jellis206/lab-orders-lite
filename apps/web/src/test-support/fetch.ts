@@ -2,7 +2,7 @@ export function installFetchMock(
   handler: (url: string, init?: RequestInit) => Response | Promise<Response>,
 ) {
   async function fetchMock(input: RequestInfo | URL, init?: RequestInit) {
-    return handler(String(input), init);
+    return handler(input instanceof Request ? input.url : String(input), init);
   }
   fetchMock.preconnect = () => undefined;
   globalThis.fetch = fetchMock;

@@ -16,6 +16,7 @@ dist
 /playwright-report/
 /blob-report/
 /playwright/.cache/
+/.playwright-cli/
 
 # code coverage
 coverage

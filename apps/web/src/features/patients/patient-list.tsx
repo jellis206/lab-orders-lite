@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
 import { Button } from "../../components/button";
 import { Input } from "../../components/input";
+import { LoadMore } from "../../components/load-more";
 import { patientListOptions } from "./api";
 
 export function PatientListPage() {
@@ -96,16 +97,7 @@ export function PatientListPage() {
               ))}
             </ul>
           </div>
-          {query.hasNextPage && (
-            <div className="mt-5 text-center">
-              <Button
-                disabled={query.isFetchingNextPage}
-                onClick={() => void query.fetchNextPage()}
-              >
-                {query.isFetchingNextPage ? "Loading…" : "Load more"}
-              </Button>
-            </div>
-          )}
+          <LoadMore pager={query} />
         </>
       )}
     </section>

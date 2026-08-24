@@ -3,12 +3,12 @@ import { apiErrorSchema } from "./common";
 
 describe("apiErrorSchema", () => {
   it("accepts a code and message", () => {
-    expect(apiErrorSchema.parse({ code: "PATIENT_NOT_FOUND", message: "Patient not found" })).toEqual(
-      {
-        code: "PATIENT_NOT_FOUND",
-        message: "Patient not found",
-      },
-    );
+    expect(
+      apiErrorSchema.parse({ code: "PATIENT_NOT_FOUND", message: "Patient not found" }),
+    ).toEqual({
+      code: "PATIENT_NOT_FOUND",
+      message: "Patient not found",
+    });
   });
 
   it("keeps issue path and message details from validation errors", () => {

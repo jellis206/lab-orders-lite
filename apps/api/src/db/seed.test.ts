@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test";
 import { sql } from "drizzle-orm";
-import { createTestDatabase } from "../test/database";
+import { createTestDatabase } from "../test-support/database";
 import { seedDatabase } from "./seed";
 
 test("seed is deterministic and represents the primary screens", async () => {

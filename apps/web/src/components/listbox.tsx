@@ -42,7 +42,7 @@ export function Listbox<T>({
           }
           className={clsx([
             "relative block w-full appearance-none rounded-lg py-[calc(--spacing(2.5)-1px)] sm:py-[calc(--spacing(1.5)-1px)]",
-            "min-h-11 sm:min-h-9",
+            "min-h-10",
             "pr-[calc(--spacing(7)-1px)] pl-[calc(--spacing(3.5)-1px)] sm:pl-[calc(--spacing(3)-1px)]",
             "text-left text-base/6 text-zinc-950 sm:text-sm/6 dark:text-white",
             "border border-zinc-950/10 group-data-hover:border-zinc-950/20 group-data-active:border-zinc-950/20 dark:border-white/10 dark:group-data-hover:border-white/20",

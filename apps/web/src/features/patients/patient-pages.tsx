@@ -24,7 +24,7 @@ export function NewPatientPage() {
     <section>
       <Header
         title="New patient"
-        description="Add a patient record and optional contact information."
+        description="Add a patient record with at least one contact method."
       />
       <PatientForm />
     </section>

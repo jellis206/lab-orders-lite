@@ -4,7 +4,7 @@ import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { createQueryClient } from "../../query-client";
 import { createTestRouter } from "../../router";
-import { installFetchMock } from "../../test/fetch";
+import { installFetchMock } from "../../test-support/fetch";
 
 const patients = [
   {
@@ -107,4 +107,3 @@ test("cancel returns to the patient list from new and edit", async () => {
   fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
   await waitFor(() => expect(editRouter.state.location.pathname).toBe("/patients"));
 });
-
