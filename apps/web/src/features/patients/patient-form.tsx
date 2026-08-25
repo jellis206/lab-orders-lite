@@ -31,6 +31,11 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
     },
   });
 
+  const contactPartner: Partial<Record<keyof FormValues, "email" | "phone">> = {
+    email: "phone",
+    phone: "email",
+  };
+
   const form = useForm({
     defaultValues: {
       firstName: patient?.firstName ?? "",
@@ -84,7 +89,18 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
             ["phone", "Phone", "tel", "tel"],
           ] as const
         ).map(([name, label, type, autocomplete]) => (
-          <form.Field key={name} name={name}>
+          <form.Field
+            key={name}
+            name={name}
+            validators={
+              contactPartner[name]
+                ? {
+                    onChangeListenTo: [contactPartner[name]],
+                    onBlurListenTo: [contactPartner[name]],
+                  }
+                : undefined
+            }
+          >
             {(field) => (
               <div>
                 <label className="text-sm font-medium text-app-text" htmlFor={field.name}>
@@ -105,14 +121,15 @@ export function PatientForm({ patient }: { patient?: PatientResponse }) {
                   }
                   invalid={field.state.meta.errors.length > 0}
                 />
-                {field.state.meta.errors.length > 0 && (
-                  <p
-                    id={`${field.name}-error`}
-                    className="mt-1 text-sm text-red-700 dark:text-red-300"
-                  >
-                    {String(field.state.meta.errors[0])}
-                  </p>
-                )}
+                <p
+                  id={`${field.name}-error`}
+                  aria-hidden={field.state.meta.errors.length === 0}
+                  className={`mt-1 min-h-10 text-sm text-red-700 dark:text-red-300 ${
+                    field.state.meta.errors.length > 0 ? "" : "invisible"
+                  }`}
+                >
+                  {field.state.meta.errors.length > 0 ? String(field.state.meta.errors[0]) : " "}
+                </p>
               </div>
             )}
           </form.Field>
