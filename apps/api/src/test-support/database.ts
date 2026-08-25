@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { migrate } from "drizzle-orm/libsql/migrator";
 import { createDatabase, type AppDatabase } from "../db/client";
-import { writeOrderRows, type OrderSnapshot, type PersistedOrder } from "../orders/order.service";
+import { writeOrderRows, type OrderSnapshot, type PersistedOrder } from "../features/orders/order.service";
 
 export async function persistOrderRows(
   db: AppDatabase,
