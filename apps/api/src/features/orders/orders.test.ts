@@ -5,9 +5,9 @@ import {
 } from "@lab-orders/contracts";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { eq } from "drizzle-orm";
-import { createApp } from "../../app";
-import { labTests, orders, patients } from "../../db/schema";
-import { createTestDatabase, persistOrderRows } from "../../test-support/database";
+import { createApp } from "@/app";
+import { labTests, orders, patients } from "@/db/schema";
+import { createTestDatabase, persistOrderRows } from "@/test-support/database";
 import { transitionOrderStatus } from "./order.service";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;

@@ -2,8 +2,8 @@ import type { OrderDetailResponse, OrderStatus } from "@lab-orders/contracts";
 import { nextOrderStatuses } from "@lab-orders/domain";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { ApiRequestError } from "../../api/client";
-import { Button } from "../../components/button";
+import { ApiRequestError } from "@/api/client";
+import { Button } from "@/components/button";
 import { orderKeys, updateOrderStatus } from "./api";
 import { formatStatus } from "./format";
 

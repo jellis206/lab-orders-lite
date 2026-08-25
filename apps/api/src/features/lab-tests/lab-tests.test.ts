@@ -4,9 +4,9 @@ import {
   labTestResponseSchema,
 } from "@lab-orders/contracts";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
-import { createApp } from "../../app";
-import { labTests } from "../../db/schema";
-import { createTestDatabase } from "../../test-support/database";
+import { createApp } from "@/app";
+import { labTests } from "@/db/schema";
+import { createTestDatabase } from "@/test-support/database";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
 let app: ReturnType<typeof createApp>;

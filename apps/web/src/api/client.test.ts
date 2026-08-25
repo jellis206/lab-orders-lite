@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test";
 import { z } from "zod";
-import { installFetchMock } from "../test-support/fetch";
+import { installFetchMock } from "@/test-support/fetch";
 import { ApiRequestError, apiRequest } from "./client";
 
 const originalFetch = globalThis.fetch;

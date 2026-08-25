@@ -6,7 +6,7 @@ import {
   type PatchPatient,
 } from "@lab-orders/contracts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-import { apiRequest } from "../../api/client";
+import { apiRequest } from "@/api/client";
 
 export const patientKeys = {
   all: ["patients"] as const,

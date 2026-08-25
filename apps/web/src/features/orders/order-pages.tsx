@@ -1,7 +1,7 @@
 import { formatCents } from "@lab-orders/contracts";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams } from "@tanstack/react-router";
-import { ApiRequestError } from "../../api/client";
+import { ApiRequestError } from "@/api/client";
 import { orderDetailOptions } from "./api";
 import { formatDateTime, formatStatus } from "./format";
 import { OrderForm } from "./order-form";

@@ -9,12 +9,12 @@ import { useForm } from "@tanstack/react-form";
 import { useInfiniteQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
 import { useState, type FormEvent } from "react";
-import { ApiRequestError } from "../../api/client";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
-import { LoadMore } from "../../components/load-more";
-import { labTestListOptions } from "../lab-tests/api";
-import { patientListOptions } from "../patients/api";
+import { ApiRequestError } from "@/api/client";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { LoadMore } from "@/components/load-more";
+import { labTestListOptions } from "@/features/lab-tests/api";
+import { patientListOptions } from "@/features/patients/api";
 import { createOrder, orderKeys } from "./api";
 import { formatDateTime } from "./format";
 

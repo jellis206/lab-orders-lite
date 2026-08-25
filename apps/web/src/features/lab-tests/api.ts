@@ -6,7 +6,7 @@ import {
   type PatchLabTest,
 } from "@lab-orders/contracts";
 import { infiniteQueryOptions, queryOptions } from "@tanstack/react-query";
-import { apiRequest } from "../../api/client";
+import { apiRequest } from "@/api/client";
 
 export const labTestKeys = {
   all: ["lab-tests"] as const,

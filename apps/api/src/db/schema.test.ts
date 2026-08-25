@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import type { Client } from "@libsql/client";
-import { createTestDatabase } from "../test-support/database";
+import { createTestDatabase } from "@/test-support/database";
 
 let database: Awaited<ReturnType<typeof createTestDatabase>>;
 let client: Client;

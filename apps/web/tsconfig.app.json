@@ -6,7 +6,10 @@
     "types": ["vite/client", "bun"],
     "allowArbitraryExtensions": true,
     "noUnusedLocals": true,
-    "noUnusedParameters": true
+    "noUnusedParameters": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "include": ["src"]
 }

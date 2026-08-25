@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link, useParams, useSearch } from "@tanstack/react-router";
-import { ApiRequestError } from "../../api/client";
+import { ApiRequestError } from "@/api/client";
 import { labTestDetailOptions } from "./api";
 import { LabTestForm } from "./lab-test-form";
 

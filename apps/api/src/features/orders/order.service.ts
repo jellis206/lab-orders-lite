@@ -5,8 +5,8 @@ import {
 } from "@lab-orders/domain";
 import type { OrderDetailResponse } from "@lab-orders/contracts";
 import { and, eq, inArray } from "drizzle-orm";
-import type { AppDatabase } from "../../db/client";
-import { labTests, orders, orderTests, patients, type OrderStatus } from "../../db/schema";
+import type { AppDatabase } from "@/db/client";
+import { labTests, orders, orderTests, patients, type OrderStatus } from "@/db/schema";
 
 export class OrderServiceError extends Error {
   constructor(

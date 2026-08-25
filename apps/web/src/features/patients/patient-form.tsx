@@ -2,9 +2,9 @@ import { createPatientSchema, type PatientResponse } from "@lab-orders/contracts
 import { useForm } from "@tanstack/react-form";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "@tanstack/react-router";
-import { ApiRequestError } from "../../api/client";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
+import { ApiRequestError } from "@/api/client";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
 import { createPatient, patientKeys, updatePatient } from "./api";
 
 type FormValues = {

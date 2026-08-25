@@ -2,9 +2,9 @@ import { afterEach, expect, test } from "bun:test";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { createQueryClient } from "../../query-client";
-import { createTestRouter } from "../../router";
-import { installFetchMock } from "../../test-support/fetch";
+import { createQueryClient } from "@/query-client";
+import { createTestRouter } from "@/router";
+import { installFetchMock } from "@/test-support/fetch";
 
 const patients = [
   {

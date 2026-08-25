@@ -1,9 +1,9 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
-import { LoadMore } from "../../components/load-more";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { LoadMore } from "@/components/load-more";
 import { patientListOptions } from "./api";
 
 export function PatientListPage() {

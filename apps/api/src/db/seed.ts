@@ -1,4 +1,4 @@
-import { getConfig } from "../config";
+import { getConfig } from "@/config";
 import { createDatabase, type AppDatabase } from "./client";
 import { labTests, orders, orderTests, patients } from "./schema";
 

@@ -1,10 +1,10 @@
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { Link, useNavigate, useSearch } from "@tanstack/react-router";
 import type { FormEvent } from "react";
-import { Button } from "../../components/button";
-import { Input } from "../../components/input";
-import { Listbox, ListboxOption } from "../../components/listbox";
-import { LoadMore } from "../../components/load-more";
+import { Button } from "@/components/button";
+import { Input } from "@/components/input";
+import { Listbox, ListboxOption } from "@/components/listbox";
+import { LoadMore } from "@/components/load-more";
 import { formatCents } from "@lab-orders/contracts";
 import { orderStatuses } from "@lab-orders/domain";
 import { orderListOptions } from "./api";

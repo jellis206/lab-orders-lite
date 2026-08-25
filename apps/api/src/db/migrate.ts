@@ -1,5 +1,5 @@
 import { migrate } from "drizzle-orm/libsql/migrator";
-import { getConfig } from "../config";
+import { getConfig } from "@/config";
 import { createDatabase } from "./client";
 
 export async function migrateDatabase(databaseUrl: string, authToken?: string) {
