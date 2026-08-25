@@ -15,7 +15,7 @@ const databaseUrlSchema = z
 const environmentSchema = z.object({
   TURSO_DATABASE_URL: databaseUrlSchema,
   TURSO_AUTH_TOKEN: z.string().min(1).optional(),
-  PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
+  API_PORT: z.coerce.number().int().min(1).max(65_535).default(3000),
 });
 
 export type AppConfig = {
@@ -28,7 +28,7 @@ export function parseConfig(environment: Record<string, string | undefined>): Ap
   const parsed = environmentSchema.parse(environment);
   const config: AppConfig = {
     databaseUrl: parsed.TURSO_DATABASE_URL,
-    port: parsed.PORT,
+    port: parsed.API_PORT,
   };
   if (parsed.TURSO_AUTH_TOKEN !== undefined) {
     config.authToken = parsed.TURSO_AUTH_TOKEN;

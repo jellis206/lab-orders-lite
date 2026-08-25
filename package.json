@@ -7,9 +7,10 @@
   ],
   "type": "module",
   "scripts": {
-    "dev": "concurrently --kill-others --names db,api,web --prefix-colors magenta,cyan,blue \"bun run db:dev\" \"bun run dev:api\" \"bun run dev:web\"",
-    "dev:api": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun run --cwd apps/api dev",
-    "dev:web": "bun run --cwd apps/web dev",
+    "setup": "bash scripts/setup.sh",
+    "dev": "set -a && . ./.env && set +a && mkdir -p .data && concurrently --kill-others --names db,api,web --prefix-colors magenta,cyan,blue \"turso dev --db-file .data/lab-orders.db --port $TURSO_PORT\" \"bun run --cwd apps/api dev\" \"bun run --cwd apps/web dev\"",
+    "dev:api": "set -a && . ./.env && set +a && bun run --cwd apps/api dev",
+    "dev:web": "set -a && . ./.env && set +a && bun run --cwd apps/web dev",
     "build": "bun run --filter './apps/*' build",
     "test": "bun test apps/api apps/web/src packages",
     "typecheck": "bun run --filter '*' typecheck",
@@ -20,12 +21,12 @@
     "check": "bun run typecheck && bun run lint && bun run test && bun run build",
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
-    "db:dev": "mkdir -p .data && turso dev --db-file .data/lab-orders.db --port 8080",
-    "db:generate": "bun run --cwd apps/api db:generate",
-    "db:migrate": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-migrate.ts",
-    "db:seed": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-seed.ts",
-    "db:seed-large": "TURSO_DATABASE_URL=${TURSO_DATABASE_URL:-http://127.0.0.1:8080} bun tools/db/db-seed-large.ts",
-    "db:studio": "bun run --cwd apps/api db:studio"
+    "db:dev": "set -a && . ./.env && set +a && mkdir -p .data && turso dev --db-file .data/lab-orders.db --port $TURSO_PORT",
+    "db:generate": "set -a && . ./.env && set +a && bun run --cwd apps/api db:generate",
+    "db:migrate": "set -a && . ./.env && set +a && bun tools/db/db-migrate.ts",
+    "db:seed": "set -a && . ./.env && set +a && bun tools/db/db-seed.ts",
+    "db:seed-large": "set -a && . ./.env && set +a && bun tools/db/db-seed-large.ts",
+    "db:studio": "set -a && . ./.env && set +a && bun run --cwd apps/api db:studio"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.79.0",

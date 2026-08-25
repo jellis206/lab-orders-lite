@@ -176,29 +176,23 @@ synchronization, Router owns URL state, Form owns form state, and derived values
 
 - [Bun](https://bun.sh/) 1.3 or newer
 - [Turso CLI](https://docs.turso.tech/cli/introduction) for local development
-- Chromium for Playwright: `bunx playwright install chromium`
+
+`bun run setup` checks for both and prints the install command if either is missing.
 
 ### Install and initialize
 
 ```bash
 git clone https://github.com/jellis206/lab-orders-lite.git
 cd lab-orders-lite
-bun install
+bun run setup
 ```
 
-Start the local database in one terminal, then migrate and seed it from another:
+`bun run setup` installs dependencies and the Playwright browser, creates `.env` from `.env.example` if it is missing,
+then starts a temporary local database to migrate and seed it. It is safe to rerun. If it reports a port conflict,
+change the offending port in `.env` and run it again.
 
-```bash
-# terminal 1
-bun run db:dev
-
-# terminal 2
-bun run db:migrate
-bun run db:seed
-```
-
-The seed is deterministic and safe to rerun. Local data is persisted in the ignored `.data/lab-orders.db` file. After
-seeding, stop the standalone database process with `Ctrl+C`; `bun dev` starts its own process on the same port.
+Local data is persisted in the ignored `.data/lab-orders.db` file. To reseed later without the full setup, run
+`bun run db:dev` in one terminal and `bun run db:migrate && bun run db:seed` in another.
 
 #### Large-scale testing
 
@@ -227,17 +221,22 @@ bun dev
 
 This starts and coordinates all three development processes:
 
-- local Turso/libSQL: <http://localhost:8080>
-- Hono API: <http://localhost:3000>
-- Vite web app: <http://localhost:5173>
+- local Turso/libSQL: `TURSO_PORT` (default 8080)
+- Hono API: `API_PORT` (default 3000)
+- Vite web app: `WEB_PORT` (default 5173)
 
-Vite proxies `/api` to Hono. Configuration defaults to the unauthenticated local endpoint; copy `.env.example` when
-overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
+Vite proxies `/api` to Hono. All three ports live in `.env` — copy `.env.example` to `.env` and edit them there;
+`TURSO_DATABASE_URL` is derived from `TURSO_PORT`. Swap it for a hosted `libsql://` URL plus `TURSO_AUTH_TOKEN`
+when pointing at a deployed database.
+
+Playwright ignores `.env` entirely: it runs its own throwaway file database on its own ports (set at the top of
+`playwright.config.ts`), so `bun run e2e` never collides with a running `bun dev` stack.
 
 ## Root commands
 
 | Command                 | Purpose                                                          |
 | ----------------------- | ---------------------------------------------------------------- |
+| `bun run setup`         | Install deps, create `.env`, migrate and seed the local database |
 | `bun dev`               | Start local Turso, API watch mode, and Vite                      |
 | `bun test`              | Run unit, integration, and component tests                       |
 | `bun run e2e`           | Run the isolated Playwright primary-flow test                    |
@@ -257,9 +256,8 @@ overriding it or when supplying a hosted `libsql://` URL and `TURSO_AUTH_TOKEN`.
 
 Database scripts live in `tools/db/` and are not included in production builds.
 
-`bun run e2e` reuses a running `bun dev` stack when one is already up. Otherwise it starts an isolated file database,
-migrates, seeds, then serves the API and Vite app. Stop any conflicting process on ports 3000 or 5173 first if the
-isolated server cannot bind.
+`bun run e2e` starts an isolated file database, migrates, seeds, then serves the API and Vite app on the e2e ports
+declared in `playwright.config.ts`, independent of `.env`.
 
 ## Scripts and tooling
 

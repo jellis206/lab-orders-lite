@@ -10,6 +10,9 @@ Default to Bun instead of Node.js tooling.
 - Use `bun run <script>` for package scripts.
 - Use `bunx <package> <command>` instead of `npx`.
 - Bun loads `.env` automatically; do not add `dotenv`.
+- Dev/prod ports (`TURSO_PORT`, `API_PORT`, `WEB_PORT`) live in the root `.env`; root scripts source it, apps read
+  `process.env`. Never hardcode a port in an app.
+- E2E ports are separate and live at the top of `playwright.config.ts`; `scripts/e2e-server.sh` must not read `.env`.
 - Prefer Bun-native or web-standard APIs over Node-specific packages where practical.
 
 ## Selected application stack

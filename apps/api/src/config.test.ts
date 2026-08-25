@@ -15,7 +15,7 @@ describe("database configuration", () => {
       parseConfig({
         TURSO_DATABASE_URL: "libsql://clinic.turso.io",
         TURSO_AUTH_TOKEN: "secret",
-        PORT: "4000",
+        API_PORT: "4000",
       }),
     ).toEqual({
       databaseUrl: "libsql://clinic.turso.io",
